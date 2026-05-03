@@ -5,7 +5,7 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { z } from 'zod';
 
-dotenv.config({ path: '../server/.env' });
+dotenv.config();
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(4000),
@@ -22,7 +22,7 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: true,
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true,
   }),
 );
