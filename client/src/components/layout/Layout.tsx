@@ -1,0 +1,17 @@
+import { Outlet } from 'react-router-dom';
+import { CartDrawer } from '../ui/CartDrawer';
+import { Footer } from './Footer';
+import { Navbar } from './Navbar';
+
+export function Layout() {
+  return (
+    <div className="app-shell">
+      <Navbar />
+      <main>
+        <Outlet />
+      </main>
+      <Footer />
+      <CartDrawer />
+    </div>
+  );
+}
