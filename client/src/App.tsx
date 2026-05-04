@@ -1,17 +1,5 @@
-import { Outlet } from 'react-router-dom';
-import { Footer } from './components/Footer';
-import { Navbar } from './components/Navbar';
+import { Layout } from './components/layout/Layout';
 
-function App() {
-  return (
-    <div className="app-shell">
-      <Navbar />
-      <main>
-        <Outlet />
-      </main>
-      <Footer />
-    </div>
-  );
+export default function App() {
+  return <Layout />;
 }
-
-export default App;

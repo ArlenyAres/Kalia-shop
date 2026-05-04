@@ -1,0 +1,257 @@
+.prod-page {
+  padding-top: 72px;
+  padding-bottom: 5rem;
+  min-height: 100vh;
+}
+
+.prod-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--kalia-gray-dark);
+  text-decoration: none;
+  margin: 2rem 0 2.5rem;
+  transition: color 150ms ease;
+}
+
+.prod-back:hover {
+  color: var(--kalia-forest);
+}
+
+.prod-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+/* Gallery */
+.prod-gallery {
+  position: sticky;
+  top: calc(72px + 1rem);
+}
+
+.prod-main-image {
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--kalia-gray-light);
+}
+
+.prod-main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: productImageFade 0.5s ease forwards;
+}
+
+.prod-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.prod-thumb {
+  width: 68px;
+  height: 84px;
+  overflow: hidden;
+  border-radius: 2px;
+  border: 2px solid transparent;
+  background: var(--kalia-gray-light);
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 150ms ease;
+}
+
+.prod-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.prod-thumb--active {
+  border-color: var(--kalia-forest);
+}
+
+/* Info */
+.prod-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 0.5rem;
+}
+
+.prod-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.prod-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.prod-price {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--kalia-forest);
+}
+
+.prod-compare {
+  font-size: 1rem;
+  color: var(--kalia-gray-dark);
+  text-decoration: line-through;
+}
+
+.prod-short-desc {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--kalia-gray-dark);
+}
+
+/* Options */
+.prod-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.prod-option__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kalia-gray-dark);
+}
+
+.prod-option__label strong {
+  color: var(--kalia-black);
+  text-transform: none;
+  font-weight: 600;
+}
+
+.prod-colors {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.prod-color-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.prod-color-btn:hover {
+  transform: scale(1.1);
+}
+
+.prod-color-btn--active {
+  outline-color: var(--kalia-forest);
+}
+
+.prod-sizes {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.prod-size-btn {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 0.75rem;
+  border-radius: 2px;
+  border: 1.5px solid var(--kalia-gray-mid);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+  color: var(--kalia-black);
+}
+
+.prod-size-btn:hover {
+  border-color: var(--kalia-forest);
+  color: var(--kalia-forest);
+}
+
+.prod-size-btn--active {
+  border-color: var(--kalia-forest);
+  background: var(--kalia-forest);
+  color: var(--kalia-white);
+}
+
+.prod-add-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  font-size: 0.84rem;
+  letter-spacing: 0.1em;
+  padding: 1rem;
+}
+
+/* Accordion */
+.prod-details {
+  border-top: 1px solid var(--kalia-gray-light);
+}
+
+.prod-accordion {
+  border-bottom: 1px solid var(--kalia-gray-light);
+}
+
+.prod-accordion summary {
+  padding: 1rem 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  color: var(--kalia-forest);
+}
+
+.prod-accordion summary::after {
+  content: '+';
+  font-size: 1.1rem;
+  font-weight: 300;
+}
+
+.prod-accordion[open] summary::after {
+  content: '−';
+}
+
+.prod-accordion p {
+  padding-bottom: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--kalia-gray-dark);
+}
+
+.prod-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+@media (max-width: 860px) {
+  .prod-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .prod-gallery {
+    position: static;
+  }
+}
