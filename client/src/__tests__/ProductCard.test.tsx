@@ -78,6 +78,7 @@ describe('ProductCard', () => {
         slug: 'aurelia-set',
         price: 14500,
         quantity: 1,
+        sku: 'b1-XS-SageShore',
       }),
     );
   });
