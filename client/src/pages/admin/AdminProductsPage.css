@@ -1,0 +1,301 @@
+.admin-products {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-products__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-products__title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--kalia-forest);
+}
+
+.admin-products__btn-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.2rem;
+  background: var(--kalia-terracotta);
+  color: var(--kalia-white);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+}
+
+.admin-products__btn-new:hover {
+  opacity: 0.88;
+}
+
+.admin-products__search {
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--kalia-gray-mid);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  width: 280px;
+  outline: none;
+  background: var(--kalia-white);
+  transition: border-color 150ms ease;
+}
+
+.admin-products__search:focus {
+  border-color: var(--kalia-forest);
+}
+
+.admin-products__table-wrap {
+  background: var(--kalia-white);
+  border: 1px solid var(--kalia-gray-mid);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.admin-products__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-products__table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--kalia-gray-dark);
+  font-weight: 500;
+  background: var(--kalia-gray-light);
+  border-bottom: 1px solid var(--kalia-gray-mid);
+}
+
+.admin-products__table td {
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(200, 197, 187, 0.4);
+  color: var(--kalia-black);
+  vertical-align: middle;
+}
+
+.admin-products__table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-products__thumb {
+  width: 40px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--kalia-gray-light);
+  display: block;
+}
+
+.admin-products__thumb-placeholder {
+  width: 40px;
+  height: 50px;
+  border-radius: 6px;
+  background: var(--kalia-gray-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--kalia-gray-mid);
+}
+
+.admin-products__name {
+  font-weight: 500;
+}
+
+.admin-products__slug {
+  font-size: 0.78rem;
+  color: var(--kalia-gray-dark);
+  margin-top: 0.15rem;
+}
+
+.admin-products__cat-badge {
+  display: inline-flex;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(19, 75, 66, 0.1);
+  color: var(--kalia-forest);
+  text-transform: capitalize;
+}
+
+.admin-products__price {
+  font-weight: 500;
+}
+
+.admin-products__stock {
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-products__toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.admin-products__toggle--active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.admin-products__toggle--inactive {
+  background: var(--kalia-gray-light);
+  color: var(--kalia-gray-dark);
+}
+
+.admin-products__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-products__action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  color: var(--kalia-gray-dark);
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.admin-products__action-btn:hover {
+  background: var(--kalia-gray-light);
+  color: var(--kalia-forest);
+}
+
+.admin-products__action-btn--delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Skeleton */
+.admin-products__skeleton-row td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(200, 197, 187, 0.4);
+}
+
+.admin-products__skel {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--kalia-gray-light) 25%, var(--kalia-gray-mid) 50%, var(--kalia-gray-light) 75%);
+  background-size: 200% 100%;
+  animation: admin-skel-shimmer 1.4s ease infinite;
+}
+
+@keyframes admin-skel-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Confirm modal */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.admin-modal {
+  background: var(--kalia-white);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+}
+
+.admin-modal__title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--kalia-forest);
+  margin-bottom: 0.75rem;
+}
+
+.admin-modal__body {
+  font-size: 0.9rem;
+  color: var(--kalia-gray-dark);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.admin-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.admin-modal__btn {
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.admin-modal__btn:hover {
+  opacity: 0.85;
+}
+
+.admin-modal__btn--cancel {
+  background: var(--kalia-gray-light);
+  color: var(--kalia-gray-dark);
+}
+
+.admin-modal__btn--confirm {
+  background: #dc2626;
+  color: white;
+}
+
+/* Toast */
+.admin-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  padding: 0.8rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  z-index: 200;
+  animation: admin-toast-in 0.2s ease;
+}
+
+@keyframes admin-toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.admin-toast--success {
+  background: #166534;
+  color: white;
+}
+
+.admin-toast--error {
+  background: #991b1b;
+  color: white;
+}
