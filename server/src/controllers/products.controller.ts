@@ -2,14 +2,12 @@ import { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { ProductService } from '../services/product.service.js';
 import { InventoryService } from '../services/inventory.service.js';
 import cloudinary from '../config/cloudinary.js';
 import type { ProductFilters } from '../types/product.types.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads');
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 
 const cloudinaryConfigured =
   process.env.CLOUDINARY_CLOUD_NAME &&
