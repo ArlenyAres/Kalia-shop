@@ -62,7 +62,22 @@ describe('ProductFilters', () => {
         onSortChange={onSortChange}
       />,
     );
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'price_asc' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Ordenar por' }), { target: { value: 'price_asc' } });
     expect(onSortChange).toHaveBeenCalledWith('price_asc');
+  });
+
+  it('clearing sort select calls onSortChange with undefined', () => {
+    const onSortChange = vi.fn();
+    render(
+      <ProductFilters
+        sizes={ALL_SIZES}
+        selectedSize={null}
+        onSizeChange={vi.fn()}
+        selectedSort="featured"
+        onSortChange={onSortChange}
+      />,
+    );
+    fireEvent.change(screen.getByRole('combobox', { name: 'Ordenar por' }), { target: { value: '' } });
+    expect(onSortChange).toHaveBeenCalledWith(undefined);
   });
 });

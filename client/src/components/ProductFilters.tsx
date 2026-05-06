@@ -7,7 +7,7 @@ interface ProductFiltersProps {
   selectedSize: ProductSize | null;
   onSizeChange: (size: ProductSize | null) => void;
   selectedSort: SortOption | undefined;
-  onSortChange: (sort: SortOption) => void;
+  onSortChange: (sort: SortOption | undefined) => void;
 }
 
 const ALL_SIZES: ProductSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -25,6 +25,7 @@ export function ProductFilters({
         {sizes.map((size) => (
           <button
             key={size}
+            type="button"
             className={`size-btn${selectedSize === size ? ' size-btn--active' : ''}`}
             onClick={() => onSizeChange(selectedSize === size ? null : size)}
             aria-pressed={selectedSize === size}
@@ -35,8 +36,12 @@ export function ProductFilters({
       </div>
       <select
         className="product-filters__sort"
+        aria-label="Ordenar por"
         value={selectedSort ?? ''}
-        onChange={(e) => onSortChange(e.target.value as SortOption)}
+        onChange={(e) => {
+          const val = e.target.value;
+          onSortChange(val === '' ? undefined : (val as SortOption));
+        }}
       >
         <option value="">Ordenar</option>
         <option value="featured">Destacados</option>
