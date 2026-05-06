@@ -1,18 +1,22 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { ProductForm } from '../components/admin/ProductForm';
 
-const { mockApiPost, mockApiGet, mockApiPut } = vi.hoisted(() => ({
-  mockApiPost: vi.fn(),
-  mockApiGet: vi.fn(),
-  mockApiPut: vi.fn(),
+const { mockCreateProduct, mockGetProducts } = vi.hoisted(() => ({
+  mockCreateProduct: vi.fn(),
+  mockGetProducts: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('../services/api', () => ({
-  default: { post: mockApiPost, get: mockApiGet, put: mockApiPut },
+vi.mock('../services/admin.service', () => ({
+  createProduct: mockCreateProduct,
+  updateProduct: vi.fn(),
+  getProducts: mockGetProducts,
+  uploadImages: vi.fn().mockResolvedValue({ images: [] }),
+  deleteProduct: vi.fn(),
+  updateStock: vi.fn(),
 }));
 
 vi.mock('../utils/logger', () => ({
@@ -47,7 +51,7 @@ describe('ProductForm', () => {
       const alerts = screen.getAllByRole('alert');
       expect(alerts.length).toBeGreaterThanOrEqual(2);
     });
-    expect(mockApiPost).not.toHaveBeenCalled();
+    expect(mockCreateProduct).not.toHaveBeenCalled();
   });
 
   it('size pills toggle correctly', async () => {
@@ -68,15 +72,24 @@ describe('ProductForm', () => {
   });
 
   it('submits correct payload to API on create', async () => {
-    mockApiPost.mockResolvedValue({ data: { id: 'new-prod-1' } });
-    renderCreate();
+    mockCreateProduct.mockResolvedValue({ id: 'new-prod-1' });
+    const { container } = renderCreate();
     await userEvent.type(screen.getByLabelText('Nombre'), 'Nerina Set');
-    await userEvent.selectOptions(screen.getByLabelText('Categoría'), 'bikini');
-    await userEvent.type(screen.getByLabelText(/precio/i), '128');
-    fireEvent.submit(screen.getByRole('button', { name: /guardar/i }));
+    // Wait for slug to be auto-generated before proceeding
     await waitFor(() => {
-      expect(mockApiPost).toHaveBeenCalledWith(
-        '/admin/products',
+      const slugInput = screen.getByLabelText('Slug') as HTMLInputElement;
+      expect(slugInput.value).toBe('nerina-set');
+    });
+    await userEvent.selectOptions(screen.getByLabelText('Categoría'), 'bikini');
+    // Use fireEvent.change for number inputs to reliably set valueAsNumber in jsdom
+    fireEvent.change(screen.getByLabelText(/precio \(€\)/i), {
+      target: { value: '128', valueAsNumber: 128 },
+    });
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form')!);
+    });
+    await waitFor(() => {
+      expect(mockCreateProduct).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Nerina Set',
           slug: 'nerina-set',

@@ -347,7 +347,7 @@ export function ProductForm() {
                 step="0.01"
                 min="0"
                 className="pf__input"
-                {...register('compareAtPrice', { valueAsNumber: true })}
+                {...register('compareAtPrice', { setValueAs: (v: string) => (v === '' ? undefined : parseFloat(v)) })}
               />
             </div>
           </div>
