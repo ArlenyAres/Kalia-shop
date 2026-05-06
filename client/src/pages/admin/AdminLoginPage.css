@@ -1,0 +1,126 @@
+.admin-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--kalia-forest);
+  padding: 1rem;
+}
+
+.admin-login__card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--kalia-white);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.28);
+}
+
+.admin-login__logo {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: var(--kalia-forest);
+  letter-spacing: 0.12em;
+  text-align: center;
+  display: block;
+}
+
+.admin-login__subtitle {
+  text-align: center;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--kalia-gray-dark);
+  margin-top: 0.25rem;
+  margin-bottom: 2rem;
+}
+
+.admin-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.admin-login__label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--kalia-gray-dark);
+}
+
+.admin-login__input {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--kalia-gray-mid);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: var(--kalia-white);
+  color: var(--kalia-black);
+  transition: border-color 180ms ease;
+  outline: none;
+}
+
+.admin-login__input:focus {
+  border-color: var(--kalia-forest);
+}
+
+.admin-login__input--error {
+  border-color: #d9534f;
+}
+
+.admin-login__field-error {
+  font-size: 0.78rem;
+  color: #d9534f;
+}
+
+.admin-login__submit {
+  margin-top: 0.5rem;
+  padding: 0.9rem;
+  background: var(--kalia-forest);
+  color: var(--kalia-white);
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: opacity 180ms ease;
+}
+
+.admin-login__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-login__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: admin-spin 0.7s linear infinite;
+}
+
+@keyframes admin-spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-login__error {
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.88rem;
+  text-align: center;
+}

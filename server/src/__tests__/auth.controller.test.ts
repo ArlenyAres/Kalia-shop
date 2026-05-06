@@ -1,14 +1,16 @@
 const mockAdminFindUnique = jest.fn();
 
 jest.mock('../config/database', () => ({
+  __esModule: true,
   default: {
     adminUser: { findUnique: mockAdminFindUnique },
   },
 }));
 
-jest.mock('bcryptjs', () => ({ compare: jest.fn() }));
-jest.mock('jsonwebtoken', () => ({ sign: jest.fn(() => 'mock.jwt.token'), verify: jest.fn() }));
+jest.mock('bcryptjs', () => ({ __esModule: true, default: { compare: jest.fn() } }));
+jest.mock('jsonwebtoken', () => ({ __esModule: true, default: { sign: jest.fn(() => 'mock.jwt.token'), verify: jest.fn() } }));
 jest.mock('../utils/logger', () => ({
+  __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), http: jest.fn() },
 }));
 

@@ -5,6 +5,7 @@ const mockStockUpdateMany = jest.fn();
 const mockStockFindMany = jest.fn();
 
 jest.mock('../config/database', () => ({
+  __esModule: true,
   default: {
     $transaction: mockTransaction,
     stock: {
@@ -17,6 +18,7 @@ jest.mock('../config/database', () => ({
 }));
 
 jest.mock('../utils/logger', () => ({
+  __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), http: jest.fn() },
 }));
 

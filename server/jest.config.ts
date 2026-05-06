@@ -8,6 +8,10 @@ const config: Config = {
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
   },
+  // Allow TypeScript files to use .js extensions in imports (for NodeNext compatibility)
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
   clearMocks: true,
   coverageDirectory: 'coverage',
   collectCoverageFrom: [

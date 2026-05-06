@@ -1,8 +1,8 @@
 import type { Prisma } from '@prisma/client';
-import prisma from '../config/database';
-import { NotFoundError } from '../utils/errors';
-import logger from '../utils/logger';
-import type { ProductFilters } from '../types/product.types';
+import prisma from '../config/database.js';
+import { NotFoundError } from '../utils/errors.js';
+import logger from '../utils/logger.js';
+import type { ProductFilters } from '../types/product.types.js';
 
 function slugify(text: string): string {
   return text
