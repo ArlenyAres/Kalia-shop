@@ -17,11 +17,11 @@ const env = envSchema.parse({
   CLIENT_URL: process.env.CLIENT_URL,
 });
 
-import { httpLogger } from './utils/logger';
-import { errorHandler } from './middleware/errorHandler.middleware';
-import productRouter from './routes/products.routes';
-import authRouter from './routes/auth.routes';
-import adminRouter from './routes/admin.routes';
+import { httpLogger } from './utils/logger.js';
+import { errorHandler } from './middleware/errorHandler.middleware.js';
+import productRouter from './routes/products.routes.js';
+import authRouter from './routes/auth.routes.js';
+import adminRouter from './routes/admin.routes.js';
 
 const app = express();
 

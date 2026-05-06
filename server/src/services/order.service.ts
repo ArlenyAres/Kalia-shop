@@ -1,8 +1,8 @@
-import prisma from '../config/database';
-import logger from '../utils/logger';
-import type { CartItem, OrderStatus, PaymentMethod, ShippingAddress } from '../types/order.types';
-import { EmailService } from './email.service';
-import { InventoryService } from './inventory.service';
+import prisma from '../config/database.js';
+import logger from '../utils/logger.js';
+import type { CartItem, OrderStatus, PaymentMethod, ShippingAddress } from '../types/order.types.js';
+import { EmailService } from './email.service.js';
+import { InventoryService } from './inventory.service.js';
 
 export interface CreateOrderInput {
   items: CartItem[];

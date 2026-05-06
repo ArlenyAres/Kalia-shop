@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { ProductService } from '../services/product.service';
-import { InventoryService } from '../services/inventory.service';
-import type { ProductFilters } from '../types/product.types';
+import { ProductService } from '../services/product.service.js';
+import { InventoryService } from '../services/inventory.service.js';
+import type { ProductFilters } from '../types/product.types.js';
 
 const productService = new ProductService();
 const inventoryService = new InventoryService();

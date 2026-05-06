@@ -27,7 +27,7 @@ export function AdminLoginPage() {
     setServerError('');
     try {
       const { data } = await api.post<{ token: string; admin: { name: string } }>(
-        '/admin/auth/login',
+        '/auth/login',
         values,
       );
       localStorage.setItem('kalia_token', data.token);

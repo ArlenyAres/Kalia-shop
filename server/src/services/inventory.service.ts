@@ -1,6 +1,6 @@
-import prisma from '../config/database';
-import { StockError } from '../utils/errors';
-import logger from '../utils/logger';
+import prisma from '../config/database.js';
+import { StockError } from '../utils/errors.js';
+import logger from '../utils/logger.js';
 
 interface StockItem {
   sku: string;
