@@ -83,7 +83,7 @@ describe('ProductForm', () => {
     await userEvent.selectOptions(screen.getByLabelText('Categoría'), 'bikini');
     // Use fireEvent.change for number inputs to reliably set valueAsNumber in jsdom
     fireEvent.change(screen.getByLabelText(/precio \(€\)/i), {
-      target: { value: '128', valueAsNumber: 128 },
+      target: { value: '128' },
     });
     await act(async () => {
       fireEvent.submit(container.querySelector('form')!);
