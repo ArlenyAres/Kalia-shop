@@ -48,7 +48,7 @@ router.get('/orders', async (req: Request, res: Response, next: NextFunction) =>
 router.get('/orders/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const order = await prisma.order.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: { items: true },
     });
     if (!order) { res.status(404).json({ error: 'NotFoundError', message: 'Order not found' }); return; }
@@ -61,7 +61,7 @@ router.get('/orders/:id', async (req: Request, res: Response, next: NextFunction
 router.patch('/orders/:id/status', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { status } = req.body as { status: string };
-    const order = await prisma.order.update({ where: { id: req.params.id }, data: { status: status as Parameters<typeof prisma.order.update>[0]['data']['status'] } });
+    const order = await prisma.order.update({ where: { id: req.params.id as string }, data: { status: status as Parameters<typeof prisma.order.update>[0]['data']['status'] } });
     logger.info('Order status updated', { orderId: req.params.id, status });
     res.json(order);
   } catch (err) {
@@ -72,7 +72,7 @@ router.patch('/orders/:id/status', async (req: Request, res: Response, next: Nex
 router.patch('/orders/:id/tracking', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { trackingNumber } = req.body as { trackingNumber: string };
-    const order = await prisma.order.update({ where: { id: req.params.id }, data: { trackingNumber } });
+    const order = await prisma.order.update({ where: { id: req.params.id as string }, data: { trackingNumber } });
     logger.info('Order tracking updated', { orderId: req.params.id, trackingNumber });
     res.json(order);
   } catch (err) {
