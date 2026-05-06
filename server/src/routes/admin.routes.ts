@@ -5,6 +5,7 @@ import {
   deleteProduct,
   updateProduct,
   updateStock,
+  upload,
   uploadImages,
 } from '../controllers/products.controller.js';
 import { requireAdmin } from '../middleware/admin.middleware.js';
@@ -23,7 +24,7 @@ router.post('/products', createProduct);
 router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
 router.patch('/products/:id/stock', updateStock);
-router.post('/products/:id/images', uploadImages);
+router.post('/products/:id/images', upload.array('images', 10), uploadImages);
 
 // Orders
 router.get('/orders', async (req: Request, res: Response, next: NextFunction) => {

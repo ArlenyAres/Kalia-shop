@@ -344,6 +344,12 @@
   font-size: 0.88rem;
 }
 
+.pf__empty-hint {
+  font-size: 0.88rem;
+  color: var(--kalia-gray-dark, #888);
+  padding: 1rem 0;
+}
+
 /* Toggle switch */
 .pf__toggle-row {
   display: flex;

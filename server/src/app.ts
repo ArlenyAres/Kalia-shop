@@ -17,16 +17,21 @@ const env = envSchema.parse({
   CLIENT_URL: process.env.CLIENT_URL,
 });
 
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { httpLogger } from './utils/logger.js';
 import { errorHandler } from './middleware/errorHandler.middleware.js';
 import productRouter from './routes/products.routes.js';
 import authRouter from './routes/auth.routes.js';
 import adminRouter from './routes/admin.routes.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const app = express();
 
 app.use(helmet());
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use(express.json({ limit: '2mb' }));
 app.use(
   rateLimit({
