@@ -1,4 +1,5 @@
 jest.mock('../config/database', () => ({
+  __esModule: true,
   default: {
     product: {
       findMany: jest.fn(),
@@ -11,6 +12,7 @@ jest.mock('../config/database', () => ({
 }));
 
 jest.mock('../utils/logger', () => ({
+  __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), http: jest.fn() },
 }));
 
@@ -18,7 +20,7 @@ import prisma from '../config/database';
 import { ProductService } from '../services/product.service';
 import { NotFoundError } from '../utils/errors';
 
-const mockProduct = prisma.product as {
+const mockProduct = (prisma.product as unknown) as {
   findMany: jest.Mock;
   findUnique: jest.Mock;
   create: jest.Mock;
@@ -104,19 +106,20 @@ describe('ProductService', () => {
 
       const result = await service.create({
         name: 'Aurelia Set',
+        slug: 'aurelia-set',
         description: 'desc',
         shortDescription: 'short',
         category: 'bikini',
         price: 14500,
         images: [],
-        colors: {},
+        colors: [],
         availableSizes: [],
         tags: [],
         isActive: true,
         isFeatured: false,
         careInstructions: 'Hand wash',
         composition: '78% polyamide',
-      });
+      } as unknown as Parameters<typeof service.create>[0]);
 
       expect(result).toEqual(created);
       const callArg = mockProduct.create.mock.calls[0][0] as { data: { slug: string } };
