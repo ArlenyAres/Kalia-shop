@@ -40,7 +40,7 @@ export const searchProducts = async (req: Request, res: Response, next: NextFunc
 
 export const getByCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.json(await productService.getByCategory(req.params.category));
+    res.json(await productService.getByCategory(req.params.category as string));
   } catch (err) {
     next(err);
   }
@@ -48,7 +48,7 @@ export const getByCategory = async (req: Request, res: Response, next: NextFunct
 
 export const getBySlug = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.json(await productService.getBySlug(req.params.slug));
+    res.json(await productService.getBySlug(req.params.slug as string));
   } catch (err) {
     next(err);
   }
@@ -79,7 +79,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
 
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.json(await productService.update(req.params.id, req.body));
+    res.json(await productService.update(req.params.id as string, req.body));
   } catch (err) {
     next(err);
   }
@@ -87,7 +87,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 
 export const deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await productService.softDelete(req.params.id);
+    await productService.softDelete(req.params.id as string);
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -97,7 +97,7 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
 export const updateStock = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { size, colorName, quantity } = req.body as { size: string; colorName: string; quantity: number };
-    await inventoryService.updateVariantStock(req.params.id, size, colorName, quantity);
+    await inventoryService.updateVariantStock(req.params.id as string, size, colorName, quantity);
     res.json({ ok: true });
   } catch (err) {
     next(err);
