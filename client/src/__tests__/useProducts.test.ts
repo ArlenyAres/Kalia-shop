@@ -72,9 +72,9 @@ describe('useProducts', () => {
     mockGetByCategory.mockResolvedValue(fakeProducts);
 
     const { result, rerender } = renderHook(
-      ({ category }: { category?: 'bikini' | 'completo' | 'trikini' }) =>
+      ({ category }: { category?: 'bikini' | 'completo' | 'trikini' | undefined }) =>
         useProducts(category),
-      { initialProps: { category: undefined } },
+      { initialProps: { category: undefined as 'bikini' | 'completo' | 'trikini' | undefined } },
     );
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(mockGetAll).toHaveBeenCalledTimes(1);
