@@ -424,12 +424,18 @@ node -e "
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-const hash = await bcrypt.hash('TU_CONTRASEÑA_SEGURA', 12);
-await prisma.adminUser.create({
-  data: { email: 'admin@tu-dominio.com', password: hash, name: 'Admin' }
-});
-console.log('Usuario admin creado');
-await prisma.\$disconnect();
+try {
+  const hash = await bcrypt.hash('TU_CONTRASEÑA_SEGURA', 12);
+  const user = await prisma.adminUser.create({
+    data: { email: 'admin@tu-dominio.com', password: hash, name: 'Admin' }
+  });
+  console.log('Usuario admin creado:', user.email);
+} catch (err) {
+  console.error('Error al crear el usuario admin:', err);
+  process.exitCode = 1;
+} finally {
+  await prisma.\$disconnect();
+}
 " --input-type=module
 ```
 
