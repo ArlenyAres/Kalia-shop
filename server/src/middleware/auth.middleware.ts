@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
 
 export interface AuthRequest extends Request {
-  user?: { id: string; email: string; name: string };
+  user?: { id: string; email: string; name: string; isAdmin?: boolean };
 }
 
 export function verifyToken(req: AuthRequest, res: Response, next: NextFunction): void {
@@ -21,6 +21,7 @@ export function verifyToken(req: AuthRequest, res: Response, next: NextFunction)
       id: string;
       email: string;
       name: string;
+      isAdmin?: boolean;
     };
     req.user = payload;
     next();
