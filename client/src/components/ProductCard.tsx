@@ -26,14 +26,17 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
+    const color = product.colors[0]?.name ?? '';
+    const size = product.availableSizes[0] ?? 'S';
+
     addItem({
       productId: product.id,
       productName: product.name,
       imageUrl: product.images[0] ?? '',
       slug: product.slug,
-      color: product.colors[0]?.name ?? '',
-      size: product.availableSizes[0] ?? 'S',
-      sku: `${product.id}-${product.colors[0]?.name ?? ''}-${product.availableSizes[0] ?? 'S'}`,
+      color,
+      size,
+      sku: `${product.id}-${size}-${color.replace(/\s/g, '')}`,
       price: product.price,
       quantity: 1,
     });
