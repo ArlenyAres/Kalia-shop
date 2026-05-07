@@ -114,10 +114,20 @@ export class ProductService {
     return product;
   }
 
-  async update(id: string, data: Prisma.ProductUpdateInput) {
+  async update(id: string, data: Prisma.ProductUpdateInput & { stock?: Array<{ size: string; colorName: string; sku: string; quantity?: number }> }) {
+    const { stock, ...rest } = data as typeof data & { stock?: Array<{ size: string; colorName: string; sku: string; quantity?: number }> };
+
     const product = await prisma.product.update({
       where: { id },
-      data,
+      data: {
+        ...rest,
+        ...(stock !== undefined && {
+          stock: {
+            deleteMany: {},
+            create: stock,
+          },
+        }),
+      } as Prisma.ProductUpdateInput,
       include: { stock: true },
     });
 

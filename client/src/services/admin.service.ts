@@ -39,7 +39,7 @@ export type UpdateProductData = Partial<CreateProductData>;
 
 // Products
 export const getProducts = () =>
-  api.get<Product[]>('/admin/products').then((r) => r.data);
+  api.get<{ products: Product[]; pagination: unknown }>('/admin/products').then((r) => r.data.products);
 
 export const createProduct = (data: CreateProductData) =>
   api.post<Product>('/admin/products', data).then((r) => r.data);
@@ -63,7 +63,7 @@ export const uploadImages = (id: string, files: File[]) => {
 
 // Orders
 export const getOrders = (page?: number, status?: OrderStatus) =>
-  api.get<Order[]>('/admin/orders', { params: { page, status } }).then((r) => r.data);
+  api.get<{ orders: Order[]; pagination: unknown }>('/admin/orders', { params: { page, status } }).then((r) => r.data.orders);
 
 export const getOrder = (id: string) =>
   api.get<Order>(`/admin/orders/${id}`).then((r) => r.data);

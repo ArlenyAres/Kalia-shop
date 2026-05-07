@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express';
-import { AuthRequest } from './auth.middleware';
+import { AuthRequest } from './auth.middleware.js';
 
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): void {
   if (!req.user) {

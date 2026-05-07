@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import prisma from '../config/database';
-import type { AuthRequest } from '../middleware/auth.middleware';
-import logger from '../utils/logger';
+import prisma from '../config/database.js';
+import type { AuthRequest } from '../middleware/auth.middleware.js';
+import logger from '../utils/logger.js';
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {

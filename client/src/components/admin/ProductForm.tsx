@@ -250,7 +250,10 @@ export function ProductForm() {
       tags,
       isActive,
       isFeatured,
-      stock: stockRows,
+      stock: stockRows.map((row) => ({
+        ...row,
+        sku: buildSku(values.category, row.size, row.colorName),
+      })),
     };
 
     try {
@@ -532,9 +535,11 @@ export function ProductForm() {
       </div>
 
       {/* Stock table */}
-      {stockRows.length > 0 && (
-        <div className="pf__section">
-          <h2 className="pf__section-heading">Stock por variante</h2>
+      <div className="pf__section">
+        <h2 className="pf__section-heading">Stock por variante</h2>
+        {stockRows.length === 0 ? (
+          <p className="pf__empty-hint">Añade colores con nombre para configurar el stock por variante.</p>
+        ) : (
           <table className="pf__stock-table">
             <thead>
               <tr>
@@ -571,8 +576,8 @@ export function ProductForm() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Settings */}
       <div className="pf__section">

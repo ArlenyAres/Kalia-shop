@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
-import { paypalConfig } from '../config/paypal';
-import logger from '../utils/logger';
+import { paypalConfig } from '../config/paypal.js';
+import logger from '../utils/logger.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? 'sk_test_placeholder');
 

@@ -5,13 +5,14 @@ import {
   deleteProduct,
   updateProduct,
   updateStock,
+  upload,
   uploadImages,
-} from '../controllers/products.controller';
-import { requireAdmin } from '../middleware/admin.middleware';
-import { verifyToken } from '../middleware/auth.middleware';
-import prisma from '../config/database';
+} from '../controllers/products.controller.js';
+import { requireAdmin } from '../middleware/admin.middleware.js';
+import { verifyToken } from '../middleware/auth.middleware.js';
+import prisma from '../config/database.js';
 import { NextFunction, Request, Response } from 'express';
-import logger from '../utils/logger';
+import logger from '../utils/logger.js';
 
 const router = Router();
 
@@ -23,7 +24,7 @@ router.post('/products', createProduct);
 router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
 router.patch('/products/:id/stock', updateStock);
-router.post('/products/:id/images', uploadImages);
+router.post('/products/:id/images', upload.array('images', 10), uploadImages);
 
 // Orders
 router.get('/orders', async (req: Request, res: Response, next: NextFunction) => {

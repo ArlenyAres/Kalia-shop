@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import logger from '../utils/logger';
+import logger from '../utils/logger.js';
 
 export interface AuthRequest extends Request {
   user?: { id: string; email: string; name: string; isAdmin?: boolean };

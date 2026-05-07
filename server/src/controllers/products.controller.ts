@@ -1,7 +1,21 @@
 import { NextFunction, Request, Response } from 'express';
-import { ProductService } from '../services/product.service';
-import { InventoryService } from '../services/inventory.service';
-import type { ProductFilters } from '../types/product.types';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { ProductService } from '../services/product.service.js';
+import { InventoryService } from '../services/inventory.service.js';
+import cloudinary from '../config/cloudinary.js';
+import type { ProductFilters } from '../types/product.types.js';
+
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+
+const cloudinaryConfigured =
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_CLOUD_NAME !== 'demo' &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_KEY !== 'demo';
+
+export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const productService = new ProductService();
 const inventoryService = new InventoryService();
@@ -104,9 +118,49 @@ export const updateStock = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const uploadImages = async (_req: Request, res: Response, next: NextFunction) => {
+export const uploadImages = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.status(501).json({ message: 'Image upload — coming in Phase 3' });
+    const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+    if (!files.length) {
+      res.status(400).json({ error: 'BadRequest', message: 'No images provided' });
+      return;
+    }
+
+    let urls: string[];
+
+    if (cloudinaryConfigured) {
+      urls = await Promise.all(
+        files.map(
+          (file) =>
+            new Promise<string>((resolve, reject) => {
+              const stream = cloudinary.uploader.upload_stream(
+                { folder: 'kalia/products', resource_type: 'image' },
+                (err, result) => {
+                  if (err || !result) return reject(err ?? new Error('Upload failed'));
+                  resolve(result.secure_url);
+                },
+              );
+              stream.end(file.buffer);
+            }),
+        ),
+      );
+    } else {
+      // Local storage fallback for development
+      if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+      const port = process.env.PORT ?? 4000;
+      urls = files.map((file) => {
+        const ext = path.extname(file.originalname) || '.jpg';
+        const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+        fs.writeFileSync(path.join(UPLOADS_DIR, filename), file.buffer);
+        return `http://localhost:${port}/uploads/${filename}`;
+      });
+    }
+
+    const product = await productService.update(req.params.id as string, {
+      images: urls,
+    });
+
+    res.json({ images: product.images });
   } catch (err) {
     next(err);
   }
