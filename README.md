@@ -2,6 +2,15 @@
 
 Tienda de ropa de baño de lujo — monorepo con storefront React y API REST en Node.js.
 
+
+https://github.com/user-attachments/assets/96707ab3-69a1-4a1b-bd87-db222b6e80cb
+
+https://github.com/user-attachments/assets/2d248413-7c35-4c4d-a7c9-d388d51f6b09
+
+
+
+
+
 ## Estructura del proyecto
 
 ```
