@@ -6,3 +6,8 @@ server/dist/
 server/.env
 *.log
 client/tsconfig.tsbuildinfo
+.vercel
+.env*.local
+
+.vercel
+.env*

@@ -20,6 +20,10 @@ export class EmailService {
   async sendOrderConfirmation(order: OrderSummary): Promise<void> {
     const to = order.guestEmail;
     if (!to) return;
+    if (!process.env.SMTP_HOST) {
+      logger.warn('SMTP no configurado: se omite el email de confirmación', { orderNumber: order.orderNumber });
+      return;
+    }
 
     await this.transporter.sendMail({
       from: '"Kalia" <noreply@kalia.shop>',
