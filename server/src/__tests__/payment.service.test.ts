@@ -72,7 +72,7 @@ describe('PaymentService', () => {
 
       expect(result.clientSecret).toBe('pi_test_secret_abc123');
       expect(mockPaymentIntentsCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ amount: 14500, currency: 'dop' }),
+        expect.objectContaining({ amount: 14500, currency: 'usd' }),
       );
     });
 

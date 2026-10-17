@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatPrice } from '../../context/CurrencyContext';
 import { AlertTriangle, Package, ShoppingBag } from 'lucide-react';
 import { getDashboard, type DashboardData } from '../../services/admin.service';
 import type { OrderStatus } from '../../types/order.types';
@@ -40,10 +41,6 @@ function formatDate(iso: string): string {
     month: '2-digit',
     year: 'numeric',
   });
-}
-
-function formatPrice(cents: number): string {
-  return `€${(cents / 100).toFixed(2)}`;
 }
 
 export function DashboardPage() {

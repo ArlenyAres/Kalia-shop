@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useCurrency } from '../context/CurrencyContext';
 import type { Product } from '../types/product.types';
 
 interface ProductCardProps {
@@ -13,16 +14,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   trikini: 'Trikinis',
 };
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
+  const { format: fmt } = useCurrency();
 
   const defaultSize = product.availableSizes[0] ?? 'S';
   const defaultColor = product.colors[0]?.name ?? '';

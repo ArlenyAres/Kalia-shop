@@ -106,6 +106,46 @@
   justify-self: end;
 }
 
+.navbar__currency {
+  display: flex;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 2px;
+  opacity: 0.85;
+}
+
+.navbar--scrolled .navbar__currency {
+  color: var(--kalia-forest);
+}
+
+.navbar--transparent .navbar__currency {
+  color: var(--kalia-white);
+}
+
+.navbar__currency button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 200ms ease, color 200ms ease;
+}
+
+.navbar--scrolled .navbar__currency button.is-active {
+  background: var(--kalia-forest);
+  color: var(--kalia-white);
+}
+
+.navbar--transparent .navbar__currency button.is-active {
+  background: var(--kalia-white);
+  color: var(--kalia-forest);
+}
+
 .navbar__cart {
   position: relative;
   display: flex;

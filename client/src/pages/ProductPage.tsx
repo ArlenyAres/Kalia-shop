@@ -4,21 +4,15 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { useCart } from '../context/CartContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { productsService } from '../services/products.service';
 import type { Product, ProductSize } from '../types/product.types';
 import './ProductPage.css';
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-
 export function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
   const { addItem, openDrawer } = useCart();
+  const { format: fmt } = useCurrency();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);

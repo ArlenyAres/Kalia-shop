@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useCurrency } from '../context/CurrencyContext';
 import { productsService } from '../services/products.service';
 import type { Product, ProductCategory } from '../types/product.types';
 import './CollectionPage.css';
@@ -10,14 +11,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   completo: 'Completos',
   trikini: 'Trikinis',
 };
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
 
 function ProductCardSkeleton() {
   return (
@@ -36,6 +29,7 @@ export function CollectionPage() {
   const { category } = useParams<{ category?: ProductCategory }>();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { format: fmt } = useCurrency();
 
   const title = category ? (CATEGORY_LABELS[category] ?? category) : 'Toda la colección';
 

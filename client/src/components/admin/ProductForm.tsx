@@ -327,7 +327,7 @@ export function ProductForm() {
 
             <div className="pf__field">
               <label className="pf__label" htmlFor="pf-price">
-                Precio <span className="pf__label-hint">(€)</span>
+                Precio <span className="pf__label-hint">(USD)</span>
               </label>
               <input
                 id="pf-price"

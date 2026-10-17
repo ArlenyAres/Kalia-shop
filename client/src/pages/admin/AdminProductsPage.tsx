@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatPrice } from '../../context/CurrencyContext';
 import { Link } from 'react-router-dom';
 import { Edit2, ImageOff, Plus, Trash2 } from 'lucide-react';
 import {
@@ -8,10 +9,6 @@ import {
 } from '../../services/admin.service';
 import type { Product } from '../../types/product.types';
 import './AdminProductsPage.css';
-
-function formatPrice(cents: number): string {
-  return `€${(cents / 100).toFixed(2)}`;
-}
 
 function totalStock(product: Product): number {
   return (product.stock ?? []).reduce((sum, v) => sum + v.quantity, 0);
