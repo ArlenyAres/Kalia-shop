@@ -4,12 +4,8 @@ import { Link } from 'react-router-dom';
 import { useCurrency } from '../context/CurrencyContext';
 import { productsService } from '../services/products.service';
 import type { Product } from '../types/product.types';
+import { CATEGORY_LABELS_SINGULAR } from '../utils/catalog';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  bikini: 'Bikini',
-  completo: 'Completo',
-  trikini: 'Trikini',
-};
 
 export function HomePage() {
   const { format } = useCurrency();
@@ -113,7 +109,7 @@ export function HomePage() {
                 />
                 <div className="product-card-body">
                   <div>
-                    <p className="eyebrow">{CATEGORY_LABELS[product.category]}</p>
+                    <p className="eyebrow">{CATEGORY_LABELS_SINGULAR[product.category]}</p>
                     <h3>{product.name}</h3>
                   </div>
                   <div className="price-row">

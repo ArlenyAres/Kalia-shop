@@ -157,6 +157,78 @@
   flex-shrink: 0;
 }
 
+.coll-card__link-area {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Quick add por talla */
+.coll-card__quick-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.65rem;
+}
+
+.coll-card__quick-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--kalia-gray-dark);
+  margin-right: 0.15rem;
+}
+
+.coll-card__quick-add button {
+  min-width: 2.1rem;
+  min-height: 2rem;
+  padding: 0 0.4rem;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--kalia-gray-mid);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--kalia-black);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.coll-card__quick-add button:hover:not(:disabled) {
+  background: var(--kalia-forest);
+  border-color: var(--kalia-forest);
+  color: var(--kalia-white);
+}
+
+.coll-card__quick-add button:disabled {
+  color: var(--kalia-gray-mid);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+/* Orden */
+.coll-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--kalia-gray-dark);
+}
+
+.coll-toolbar select {
+  font: inherit;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--kalia-gray-mid);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--kalia-black);
+}
+
 /* Skeleton */
 .coll-card--skeleton {
   pointer-events: none;

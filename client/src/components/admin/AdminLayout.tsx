@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, LogOut, Package, ShoppingBag } from 'lucide-react';
+import { clearSession } from '../../services/session';
 import './AdminLayout.css';
 
 export function AdminLayout() {
@@ -7,8 +8,7 @@ export function AdminLayout() {
   const adminName = localStorage.getItem('kalia_admin') ?? 'Admin';
 
   const logout = () => {
-    localStorage.removeItem('kalia_token');
-    localStorage.removeItem('kalia_admin');
+    clearSession();
     navigate('/admin/login');
   };
 

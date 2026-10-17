@@ -15,6 +15,18 @@ export default defineConfig({
   preview: {
     port: 4173,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Librerías en chunks propios: cambian poco y el navegador las mantiene en caché entre despliegues.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          motion: ['framer-motion'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

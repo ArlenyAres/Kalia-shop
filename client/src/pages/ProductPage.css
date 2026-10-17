@@ -181,7 +181,7 @@
   color: var(--kalia-black);
 }
 
-.prod-size-btn:hover {
+.prod-size-btn:hover:not(:disabled) {
   border-color: var(--kalia-forest);
   color: var(--kalia-forest);
 }
@@ -190,6 +190,13 @@
   border-color: var(--kalia-forest);
   background: var(--kalia-forest);
   color: var(--kalia-white);
+}
+
+.prod-size-btn:disabled {
+  border-color: var(--kalia-gray-light);
+  color: var(--kalia-gray-mid);
+  text-decoration: line-through;
+  cursor: not-allowed;
 }
 
 .prod-add-btn {

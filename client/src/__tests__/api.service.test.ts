@@ -42,7 +42,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   // Reset window.location
   Object.defineProperty(window, 'location', {
-    value: { href: '' },
+    value: { href: '', pathname: '/' },
     writable: true,
     configurable: true,
   });
@@ -73,7 +73,8 @@ describe('response interceptor', () => {
     expect(mockLogger.error).toHaveBeenCalledWith('API error', { url: '/api/products', status: 500 });
   });
 
-  it('clears token and redirects on 401', async () => {
+  it('clears token and redirects on 401 inside the admin panel', async () => {
+    window.location.pathname = '/admin/pedidos';
     localStorage.setItem('kalia_token', 'some-token');
     const error = {
       response: { status: 401 },
@@ -82,6 +83,13 @@ describe('response interceptor', () => {
     await expect(captured.responseRejected!(error)).rejects.toEqual(error);
     expect(localStorage.getItem('kalia_token')).toBeNull();
     expect(window.location.href).toBe('/admin/login');
+  });
+
+  it('does not redirect shoppers on the public store', async () => {
+    window.location.pathname = '/checkout';
+    const error = { response: { status: 401 }, config: { url: '/api/checkout' } };
+    await expect(captured.responseRejected!(error)).rejects.toEqual(error);
+    expect(window.location.href).toBe('');
   });
 
   it('passes through successful responses unchanged', () => {

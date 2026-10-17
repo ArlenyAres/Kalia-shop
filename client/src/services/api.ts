@@ -1,5 +1,6 @@
 import axios from 'axios';
 import logger from '../utils/logger';
+import { clearSession, getToken } from './session';
 
 const api = axios.create({
   baseURL: (import.meta.env.VITE_API_URL as string | undefined) ?? '/api',
@@ -7,7 +8,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('kalia_token');
+  const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -20,8 +21,9 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const url = error.config?.url;
 
-    if (status === 401) {
-      localStorage.removeItem('kalia_token');
+    // Solo una sesión de admin caducada debe mandar al login; la tienda pública nunca.
+    if (status === 401 && window.location.pathname.startsWith('/admin') && !url?.includes('/auth/login')) {
+      clearSession();
       window.location.href = '/admin/login';
     }
 
