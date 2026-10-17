@@ -15,6 +15,8 @@ function slugify(text: string): string {
     .replace(/\s+/g, '-');
 }
 
+const MAX_IMAGES = 10;
+
 export class ProductService {
   constructor(private readonly db: PrismaClient = prisma) {}
 
@@ -66,6 +68,13 @@ export class ProductService {
       throw new NotFoundError(`Product not found: ${slug}`);
     }
 
+    return product;
+  }
+
+  /** Para el panel: incluye productos desactivados. */
+  async getById(id: string) {
+    const product = await this.db.product.findUnique({ where: { id }, include: { stock: true } });
+    if (!product) throw new NotFoundError(`Product not found: ${id}`);
     return product;
   }
 
@@ -134,6 +143,15 @@ export class ProductService {
 
     logger.info('Product updated', { id });
     return product;
+  }
+
+  /** Añade imágenes a las existentes (el formulario muestra las actuales + las nuevas). */
+  async appendImages(id: string, urls: string[], max = MAX_IMAGES) {
+    const current = await this.db.product.findUnique({ where: { id }, select: { images: true } });
+    if (!current) throw new NotFoundError(`Product not found: ${id}`);
+
+    const images = [...current.images, ...urls].slice(0, max);
+    return this.update(id, { images });
   }
 
   async softDelete(id: string) {

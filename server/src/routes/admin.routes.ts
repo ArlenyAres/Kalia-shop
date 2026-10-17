@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  adminGetProduct,
   adminGetProducts,
   createProduct,
   deleteProduct,
@@ -34,6 +35,7 @@ router.use(verifyToken, requireAdmin);
 
 // Products
 router.get('/products', validate(paginationSchema, 'query'), adminGetProducts);
+router.get('/products/:id', adminGetProduct);
 router.post('/products', validate(productCreateSchema), createProduct);
 router.put('/products/:id', validate(productUpdateSchema), updateProduct);
 router.delete('/products/:id', deleteProduct);

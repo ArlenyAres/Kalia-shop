@@ -37,9 +37,17 @@ export interface CreateProductData {
 
 export type UpdateProductData = Partial<CreateProductData>;
 
+// Máximo que acepta el API; el panel aún no pagina.
+const ADMIN_LIST_LIMIT = 100;
+
 // Products
 export const getProducts = () =>
-  api.get<{ products: Product[]; pagination: unknown }>('/admin/products').then((r) => r.data.products);
+  api
+    .get<{ products: Product[]; pagination: unknown }>('/admin/products', { params: { limit: ADMIN_LIST_LIMIT } })
+    .then((r) => r.data.products);
+
+export const getProduct = (id: string) =>
+  api.get<Product>(`/admin/products/${id}`).then((r) => r.data);
 
 export const createProduct = (data: CreateProductData) =>
   api.post<Product>('/admin/products', data).then((r) => r.data);
@@ -63,7 +71,9 @@ export const uploadImages = (id: string, files: File[]) => {
 
 // Orders
 export const getOrders = (page?: number, status?: OrderStatus) =>
-  api.get<{ orders: Order[]; pagination: unknown }>('/admin/orders', { params: { page, status } }).then((r) => r.data.orders);
+  api
+    .get<{ orders: Order[]; pagination: unknown }>('/admin/orders', { params: { page, status, limit: ADMIN_LIST_LIMIT } })
+    .then((r) => r.data.orders);
 
 export const getOrder = (id: string) =>
   api.get<Order>(`/admin/orders/${id}`).then((r) => r.data);

@@ -87,6 +87,14 @@ export const adminGetProducts = async (req: Request, res: Response, next: NextFu
   }
 };
 
+export const adminGetProduct = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json(await productService.getById(req.params.id as string));
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const product = await productService.create(req.body);
@@ -161,9 +169,7 @@ export const uploadImages = async (req: Request, res: Response, next: NextFuncti
       });
     }
 
-    const product = await productService.update(req.params.id as string, {
-      images: urls,
-    });
+    const product = await productService.appendImages(req.params.id as string, urls);
 
     res.json({ images: product.images });
   } catch (err) {

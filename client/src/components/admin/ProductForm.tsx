@@ -4,12 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Trash2, Upload } from 'lucide-react';
-import {
-  createProduct,
-  updateProduct,
-  uploadImages,
-} from '../../services/admin.service';
-import { getProducts } from '../../services/admin.service';
+import { createProduct, getProduct, updateProduct, uploadImages } from '../../services/admin.service';
 import type { Product, ProductCategory, ProductSize } from '../../types/product.types';
 import './ProductForm.css';
 
@@ -111,9 +106,7 @@ export function ProductForm() {
   // Load existing product for edit
   useEffect(() => {
     if (!isEdit || !id) return;
-    getProducts().then((list) => {
-      const found = list.find((p) => p.id === id);
-      if (!found) return;
+    getProduct(id).then((found) => {
       setProduct(found);
       setValue('name', found.name);
       setValue('slug', found.slug);
@@ -146,8 +139,12 @@ export function ProductForm() {
         );
       }
       setImagePreviews(found.images);
+    }).catch(() => {
+      // Sin datos no se puede editar: evita guardar un formulario vacío encima del producto.
+      showToast('No se pudo cargar el producto', 'error');
+      navigate('/admin/productos');
     });
-  }, [id, isEdit, setValue]);
+  }, [id, isEdit, setValue, navigate]);
 
   // Rebuild stock rows when sizes or colors change
   useEffect(() => {

@@ -5,15 +5,15 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { ProductForm } from '../components/admin/ProductForm';
 
-const { mockCreateProduct, mockGetProducts } = vi.hoisted(() => ({
+const { mockCreateProduct, mockGetProduct } = vi.hoisted(() => ({
   mockCreateProduct: vi.fn(),
-  mockGetProducts: vi.fn().mockResolvedValue([]),
+  mockGetProduct: vi.fn(),
 }));
 
 vi.mock('../services/admin.service', () => ({
   createProduct: mockCreateProduct,
   updateProduct: vi.fn(),
-  getProducts: mockGetProducts,
+  getProduct: mockGetProduct,
   uploadImages: vi.fn().mockResolvedValue({ images: [] }),
   deleteProduct: vi.fn(),
   updateStock: vi.fn(),
@@ -34,7 +34,48 @@ function renderCreate() {
   );
 }
 
+function renderEdit(id = 'p9') {
+  return render(
+    <MemoryRouter initialEntries={[`/admin/productos/${id}`]}>
+      <Routes>
+        <Route path="/admin/productos/:id" element={<ProductForm />} />
+        <Route path="/admin/productos" element={<div>Products list</div>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 describe('ProductForm', () => {
+  it('loads the product to edit by id', async () => {
+    mockGetProduct.mockResolvedValue({
+      id: 'p9',
+      name: 'Malibu Tank',
+      slug: 'malibu-tank',
+      category: 'completo',
+      price: 15900,
+      compareAtPrice: null,
+      shortDescription: '',
+      description: '',
+      composition: '',
+      careInstructions: '',
+      isActive: false,
+      isFeatured: false,
+      tags: [],
+      availableSizes: ['M'],
+      colors: [],
+      images: [],
+    });
+    renderEdit();
+    await waitFor(() => expect(screen.getByLabelText('Nombre')).toHaveValue('Malibu Tank'));
+    expect(mockGetProduct).toHaveBeenCalledWith('p9');
+  });
+
+  it('leaves the form when the product cannot be loaded', async () => {
+    mockGetProduct.mockRejectedValue(new Error('404'));
+    renderEdit();
+    expect(await screen.findByText('Products list')).toBeInTheDocument();
+  });
+
   it('slug auto-generates from product name input', async () => {
     renderCreate();
     await userEvent.type(screen.getByLabelText('Nombre'), 'Aurelia Set');

@@ -21,7 +21,8 @@ export interface PlacedOrder extends CheckoutInput {
 
 const LAST_ORDER_KEY = 'kalia_last_order';
 
-// Sin backend (p. ej. demo en Vercel) el endpoint responde 404 y simulamos el pedido.
+// Sin backend (p. ej. demo en Vercel) el endpoint responde 404, o 405 si el hosting estático
+// rechaza el POST, y simulamos el pedido.
 // VITE_DEMO_MODE=false desactiva la simulación.
 const demoEnabled = import.meta.env.VITE_DEMO_MODE !== 'false';
 
@@ -67,7 +68,8 @@ export const ordersService = {
         isDemo: false,
       };
     } catch (err) {
-      if (!(demoEnabled && isAxiosError(err) && err.response?.status === 404)) throw err;
+      const status = isAxiosError(err) ? err.response?.status : undefined;
+      if (!(demoEnabled && (status === 404 || status === 405))) throw err;
       logger.warn('orders.checkout – endpoint no disponible, pedido simulado');
       order = { ...input, orderNumber: demoOrderNumber(), createdAt: new Date().toISOString(), isDemo: true };
     }

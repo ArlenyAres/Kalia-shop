@@ -153,4 +153,40 @@ describe('ProductService', () => {
       );
     });
   });
+
+  describe('appendImages', () => {
+    it('keeps existing images and adds the new ones', async () => {
+      mockProduct.findUnique.mockResolvedValue({ images: ['a.jpg'] });
+      mockProduct.update.mockResolvedValue({ ...fakeProduct, images: ['a.jpg', 'b.jpg'] });
+
+      await service.appendImages('prod-1', ['b.jpg']);
+
+      expect(mockProduct.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'prod-1' }, data: { images: ['a.jpg', 'b.jpg'] } }),
+      );
+    });
+
+    it('caps the gallery at 10 images', async () => {
+      mockProduct.findUnique.mockResolvedValue({ images: Array.from({ length: 9 }, (_, i) => `${i}.jpg`) });
+      mockProduct.update.mockResolvedValue(fakeProduct);
+
+      await service.appendImages('prod-1', ['x.jpg', 'y.jpg']);
+
+      expect(mockProduct.update.mock.calls[0][0].data.images).toHaveLength(10);
+    });
+
+    it('throws NotFoundError for unknown products', async () => {
+      mockProduct.findUnique.mockResolvedValue(null);
+
+      await expect(service.appendImages('nope', ['x.jpg'])).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('getById', () => {
+    it('returns inactive products too (admin view)', async () => {
+      mockProduct.findUnique.mockResolvedValue({ ...fakeProduct, isActive: false });
+
+      await expect(service.getById('prod-1')).resolves.toMatchObject({ isActive: false });
+    });
+  });
 });
