@@ -2,11 +2,13 @@ import { mkdirSync } from 'fs';
 import morgan from 'morgan';
 import winston from 'winston';
 
-mkdirSync('logs', { recursive: true });
-
 const { combine, timestamp, colorize, printf, json, errors } = winston.format;
 
 const isDev = process.env.NODE_ENV !== 'production';
+
+// En Vercel (serverless) el disco es de solo lectura: solo consola, que recoge Vercel Logs.
+const writeFiles = !process.env.VERCEL;
+if (writeFiles) mkdirSync('logs', { recursive: true });
 
 const devFormat = combine(
   colorize({ all: true }),
@@ -25,8 +27,12 @@ const logger = winston.createLogger({
   format: isDev ? devFormat : prodFormat,
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
+    ...(writeFiles
+      ? [
+          new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+          new winston.transports.File({ filename: 'logs/combined.log' }),
+        ]
+      : []),
   ],
 });
 

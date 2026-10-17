@@ -149,6 +149,13 @@ export const uploadImages = async (req: Request, res: Response, next: NextFuncti
             }),
         ),
       );
+    } else if (process.env.VERCEL) {
+      // En serverless el disco no persiste: sin Cloudinary las fotos se perderían.
+      res.status(503).json({
+        error: 'StorageNotConfigured',
+        message: 'Configura Cloudinary (CLOUDINARY_*) para subir imágenes en producción',
+      });
+      return;
     } else {
       // Local storage fallback for development
       if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
