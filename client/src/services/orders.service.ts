@@ -53,11 +53,19 @@ export const ordersService = {
   async checkout(input: CheckoutInput): Promise<PlacedOrder> {
     let order: PlacedOrder;
     try {
-      const { data } = await api.post<{ orderNumber: string }>('/checkout', {
-        ...input,
-        guestEmail: input.shippingAddress.email,
+      // El servidor recalcula precios y total; nos quedamos con su total.
+      const { data } = await api.post<{ orderNumber: string; total?: number }>('/checkout', {
+        items: input.items,
+        shippingAddress: input.shippingAddress,
+        paymentMethod: input.paymentMethod,
       });
-      order = { ...input, orderNumber: data.orderNumber, createdAt: new Date().toISOString(), isDemo: false };
+      order = {
+        ...input,
+        total: data.total ?? input.total,
+        orderNumber: data.orderNumber,
+        createdAt: new Date().toISOString(),
+        isDemo: false,
+      };
     } catch (err) {
       if (!(demoEnabled && isAxiosError(err) && err.response?.status === 404)) throw err;
       logger.warn('orders.checkout – endpoint no disponible, pedido simulado');

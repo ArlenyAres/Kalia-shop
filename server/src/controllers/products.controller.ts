@@ -9,27 +9,35 @@ import type { ProductFilters } from '../types/product.types.js';
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 
+// La extensión sale del MIME validado, nunca del nombre que manda el cliente.
+const EXTENSIONS: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/avif': '.avif',
+};
+
 const cloudinaryConfigured =
   process.env.CLOUDINARY_CLOUD_NAME &&
   process.env.CLOUDINARY_CLOUD_NAME !== 'demo' &&
   process.env.CLOUDINARY_API_KEY &&
   process.env.CLOUDINARY_API_KEY !== 'demo';
 
-export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
+
+export const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => cb(null, ALLOWED_IMAGE_TYPES.has(file.mimetype)),
+});
 
 const productService = new ProductService();
 const inventoryService = new InventoryService();
 
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const filters: ProductFilters = {
-      category: req.query.category as ProductFilters['category'],
-      page: req.query.page ? Number(req.query.page) : undefined,
-      limit: req.query.limit ? Number(req.query.limit) : undefined,
-      sortBy: req.query.sortBy as ProductFilters['sortBy'],
-      tags: req.query.tags as string | undefined,
-    };
-    res.json(await productService.getAll(filters));
+    // req.query ya viene validado por productListQuerySchema
+    res.json(await productService.getAll(req.query as ProductFilters));
   } catch (err) {
     next(err);
   }
@@ -45,8 +53,7 @@ export const getFeatured = async (_req: Request, res: Response, next: NextFuncti
 
 export const searchProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const q = (req.query.q as string) ?? '';
-    res.json(await productService.search(q));
+    res.json(await productService.search(req.query.q as string));
   } catch (err) {
     next(err);
   }
@@ -72,11 +79,9 @@ export const getBySlug = async (req: Request, res: Response, next: NextFunction)
 
 export const adminGetProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const filters: ProductFilters = {
-      page: req.query.page ? Number(req.query.page) : undefined,
-      limit: req.query.limit ? Number(req.query.limit) : undefined,
-    };
-    res.json(await productService.getAll({ ...filters, ...({ isActive: undefined } as object) }));
+    const { page, limit } = req.query as { page?: number; limit?: number };
+    // El panel necesita ver también los productos desactivados.
+    res.json(await productService.getAll({ page, limit, includeInactive: true }));
   } catch (err) {
     next(err);
   }
@@ -147,12 +152,12 @@ export const uploadImages = async (req: Request, res: Response, next: NextFuncti
     } else {
       // Local storage fallback for development
       if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-      const port = process.env.PORT ?? 4000;
+      const baseUrl = process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
       urls = files.map((file) => {
-        const ext = path.extname(file.originalname) || '.jpg';
+        const ext = EXTENSIONS[file.mimetype] ?? '.jpg';
         const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
         fs.writeFileSync(path.join(UPLOADS_DIR, filename), file.buffer);
-        return `http://localhost:${port}/uploads/${filename}`;
+        return `${baseUrl}/uploads/${filename}`;
       });
     }
 

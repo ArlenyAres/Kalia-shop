@@ -1,19 +1,17 @@
 const mockTransaction = jest.fn();
-const mockStockFindUnique = jest.fn();
-const mockStockUpdate = jest.fn();
 const mockStockUpdateMany = jest.fn();
 const mockStockFindMany = jest.fn();
+const mockOrderItemFindMany = jest.fn();
 
 jest.mock('../config/database', () => ({
   __esModule: true,
   default: {
     $transaction: mockTransaction,
     stock: {
-      findUnique: mockStockFindUnique,
-      update: mockStockUpdate,
       updateMany: mockStockUpdateMany,
       findMany: mockStockFindMany,
     },
+    orderItem: { findMany: mockOrderItemFindMany },
   },
 }));
 
@@ -22,10 +20,22 @@ jest.mock('../utils/logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), http: jest.fn() },
 }));
 
+import type { Prisma } from '@prisma/client';
 import { InventoryService } from '../services/inventory.service';
 import { StockError } from '../utils/errors';
 
-const mockStock = { id: 's1', sku: 'KAL-AUR-SS-S', quantity: 8, productId: 'p1', size: 'S', colorName: 'Sage Shore', updatedAt: new Date() };
+function fakeTx(updatedCount: number, sku = 'KAL-AUR-SS-S') {
+  return {
+    stock: {
+      updateMany: jest.fn().mockResolvedValue({ count: updatedCount }),
+      findFirst: jest.fn().mockResolvedValue({ sku }),
+    },
+  } as unknown as Prisma.TransactionClient & {
+    stock: { updateMany: jest.Mock; findFirst: jest.Mock };
+  };
+}
+
+const variant = { productId: 'p1', size: 'S', colorName: 'Sage Shore', quantity: 3 };
 
 describe('InventoryService', () => {
   let service: InventoryService;
@@ -36,81 +46,47 @@ describe('InventoryService', () => {
   });
 
   describe('reserveStock', () => {
-    it('decrements quantity correctly when stock is sufficient', async () => {
-      mockTransaction.mockImplementation(async (fn: (tx: typeof import('../config/database')['default']) => Promise<void>) => {
-        const tx = { stock: { findUnique: jest.fn().mockResolvedValue(mockStock), update: jest.fn() } };
-        await fn(tx as unknown as typeof import('../config/database')['default']);
-      });
+    it('decrements only when enough stock is available and returns the SKU', async () => {
+      const tx = fakeTx(1);
 
-      await expect(
-        service.reserveStock([{ sku: 'KAL-AUR-SS-S', quantity: 3 }], 'order-1'),
-      ).resolves.toBeUndefined();
+      await expect(service.reserveStock(tx, [variant])).resolves.toEqual(['KAL-AUR-SS-S']);
+
+      expect(tx.stock.updateMany).toHaveBeenCalledWith({
+        where: { productId: 'p1', size: 'S', colorName: 'Sage Shore', quantity: { gte: 3 } },
+        data: { quantity: { decrement: 3 } },
+      });
     });
 
-    it('throws StockError when quantity is insufficient', async () => {
-      mockTransaction.mockImplementation(async (fn: (tx: typeof import('../config/database')['default']) => Promise<void>) => {
-        const tx = {
-          stock: {
-            findUnique: jest.fn().mockResolvedValue({ ...mockStock, quantity: 1 }),
-            update: jest.fn(),
-          },
-        };
-        await fn(tx as unknown as typeof import('../config/database')['default']);
-      });
+    it('throws StockError when no variant has enough quantity', async () => {
+      const tx = fakeTx(0);
 
-      await expect(
-        service.reserveStock([{ sku: 'KAL-AUR-SS-S', quantity: 5 }], 'order-2'),
-      ).rejects.toThrow(StockError);
-    });
-
-    it('throws StockError when SKU does not exist', async () => {
-      mockTransaction.mockImplementation(async (fn: (tx: typeof import('../config/database')['default']) => Promise<void>) => {
-        const tx = { stock: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn() } };
-        await fn(tx as unknown as typeof import('../config/database')['default']);
-      });
-
-      await expect(
-        service.reserveStock([{ sku: 'UNKNOWN', quantity: 1 }], 'order-3'),
-      ).rejects.toThrow(StockError);
+      await expect(service.reserveStock(tx, [variant])).rejects.toThrow(StockError);
     });
   });
 
   describe('releaseStock', () => {
-    it('restores reserved quantity', async () => {
-      mockTransaction.mockImplementation(async (fn: (tx: typeof import('../config/database')['default']) => Promise<void>) => {
-        const tx = { stock: { findUnique: jest.fn().mockResolvedValue(mockStock), update: jest.fn() } };
-        await fn(tx as unknown as typeof import('../config/database')['default']);
-      });
-      mockStockUpdate.mockResolvedValue({});
+    it('restores the quantities stored in the order items', async () => {
+      mockOrderItemFindMany.mockResolvedValue([
+        { productId: 'p1', size: 'S', color: 'Sage Shore', quantity: 2 },
+      ]);
+      mockStockUpdateMany.mockReturnValue('op');
+      mockTransaction.mockResolvedValue([]);
 
-      await service.reserveStock([{ sku: 'KAL-AUR-SS-S', quantity: 2 }], 'order-4');
       await service.releaseStock('order-4');
 
-      expect(mockStockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { quantity: { increment: 2 } } }),
-      );
-    });
-
-    it('does nothing for unknown orderId', async () => {
-      await service.releaseStock('nonexistent-order');
-      expect(mockStockUpdate).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('confirmStockDeduction', () => {
-    it('finalizes deduction by clearing reservation', async () => {
-      mockTransaction.mockImplementation(async (fn: (tx: typeof import('../config/database')['default']) => Promise<void>) => {
-        const tx = { stock: { findUnique: jest.fn().mockResolvedValue(mockStock), update: jest.fn() } };
-        await fn(tx as unknown as typeof import('../config/database')['default']);
+      expect(mockStockUpdateMany).toHaveBeenCalledWith({
+        where: { productId: 'p1', size: 'S', colorName: 'Sage Shore' },
+        data: { quantity: { increment: 2 } },
       });
+      expect(mockTransaction).toHaveBeenCalledWith(['op']);
+    });
 
-      await service.reserveStock([{ sku: 'KAL-AUR-SS-S', quantity: 1 }], 'order-5');
-      await service.confirmStockDeduction('order-5');
+    it('does nothing for an order without items', async () => {
+      mockOrderItemFindMany.mockResolvedValue([]);
 
-      // After confirm, release should be a no-op
-      mockStockUpdate.mockClear();
-      await service.releaseStock('order-5');
-      expect(mockStockUpdate).not.toHaveBeenCalled();
+      await service.releaseStock('nonexistent-order');
+
+      expect(mockTransaction).not.toHaveBeenCalled();
     });
   });
 

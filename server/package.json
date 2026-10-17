@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/app.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/app.js",
+    "start": "node dist/server.js",
     "prisma:generate": "prisma generate --schema ../prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema ../prisma/schema.prisma",
     "prisma:seed": "tsx -r dotenv/config ../prisma/seed.ts",

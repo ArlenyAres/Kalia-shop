@@ -6,13 +6,15 @@ import {
   getProducts,
   searchProducts,
 } from '../controllers/products.controller.js';
+import { validate } from '../middleware/validation.middleware.js';
+import { categoryParamSchema, productListQuerySchema, searchQuerySchema } from '../validation/schemas.js';
 
 const router = Router();
 
-router.get('/', getProducts);
+router.get('/', validate(productListQuerySchema, 'query'), getProducts);
 router.get('/featured', getFeatured);
-router.get('/search', searchProducts);
-router.get('/category/:category', getByCategory);
+router.get('/search', validate(searchQuerySchema, 'query'), searchProducts);
+router.get('/category/:category', validate(categoryParamSchema, 'params'), getByCategory);
 router.get('/:slug', getBySlug);
 
 export default router;

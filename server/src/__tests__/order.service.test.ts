@@ -1,58 +1,22 @@
-const mockOrderCreate = jest.fn();
-const mockOrderCount = jest.fn();
-const mockOrderFindUnique = jest.fn();
-const mockOrderUpdate = jest.fn();
-const mockReserveStock = jest.fn();
-const mockSendOrderConfirmation = jest.fn();
-
-jest.mock('../config/database', () => ({
-  __esModule: true,
-  default: {
-    order: {
-      create: mockOrderCreate,
-      count: mockOrderCount,
-      findUnique: mockOrderFindUnique,
-      update: mockOrderUpdate,
-    },
-  },
-}));
-
-jest.mock('../services/inventory.service', () => ({
-  InventoryService: jest.fn().mockImplementation(() => ({
-    reserveStock: mockReserveStock,
-  })),
-}));
-
-jest.mock('../services/email.service', () => ({
-  EmailService: jest.fn().mockImplementation(() => ({
-    sendOrderConfirmation: mockSendOrderConfirmation,
-  })),
-}));
+jest.mock('../config/database', () => ({ __esModule: true, default: {} }));
 
 jest.mock('../utils/logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), http: jest.fn() },
 }));
 
+import type { PrismaClient } from '@prisma/client';
 import logger from '../utils/logger';
-import { OrderService, type CreateOrderInput } from '../services/order.service';
+import { OrderService, generateOrderNumber } from '../services/order.service';
+import type { EmailService } from '../services/email.service';
+import type { InventoryService } from '../services/inventory.service';
+import { NotFoundError, ValidationError } from '../utils/errors';
+import type { CheckoutRequest } from '../validation/schemas';
 
 const mockLogger = logger as jest.Mocked<typeof logger>;
 
-const fakeInput: CreateOrderInput = {
-  items: [
-    {
-      productId: 'p1',
-      productName: 'Aurelia Set',
-      imageUrl: 'https://example.com/img.jpg',
-      slug: 'aurelia-set',
-      color: 'Sage Shore',
-      size: 'S',
-      sku: 'KAL-AUR-SS-S',
-      price: 14500,
-      quantity: 1,
-    },
-  ],
+const input: CheckoutRequest = {
+  items: [{ productId: 'p1', size: 'S', color: 'Sage Shore', quantity: 2 }],
   shippingAddress: {
     firstName: 'Ana',
     lastName: 'García',
@@ -64,105 +28,140 @@ const fakeInput: CreateOrderInput = {
     country: 'DO',
   },
   paymentMethod: 'paypal',
-  paymentId: 'PAY-ABC123',
-  subtotal: 14500,
-  shippingCost: 0,
-  total: 14500,
-  guestEmail: 'ana@test.com',
 };
 
-describe('OrderService', () => {
-  let service: OrderService;
+function setup() {
+  const tx = {
+    product: {
+      findMany: jest.fn().mockResolvedValue([
+        { id: 'p1', name: 'Aurelia Set', price: 14500, images: ['https://example.com/a.jpg'] },
+      ]),
+    },
+    order: {
+      create: jest.fn().mockImplementation(({ data }) =>
+        Promise.resolve({ id: 'ord-1', ...data, items: data.items.create }),
+      ),
+    },
+  };
+  const db = {
+    $transaction: jest.fn((fn: (t: typeof tx) => unknown) => fn(tx)),
+    order: { findUnique: jest.fn(), update: jest.fn(), findMany: jest.fn(), count: jest.fn() },
+  };
+  const inventory = {
+    reserveStock: jest.fn().mockResolvedValue(['KAL-AUR-SS-S']),
+    releaseStock: jest.fn().mockResolvedValue(undefined),
+  };
+  const email = { sendOrderConfirmation: jest.fn().mockResolvedValue(undefined) };
+  const service = new OrderService(
+    db as unknown as PrismaClient,
+    inventory as unknown as InventoryService,
+    email as unknown as EmailService,
+  );
+  return { service, tx, db, inventory, email };
+}
 
-  beforeEach(() => {
-    service = new OrderService();
-    jest.clearAllMocks();
+describe('generateOrderNumber', () => {
+  it('uses the KAL-YYYY-XXXXXX format', () => {
+    expect(generateOrderNumber(new Date('2026-05-01'))).toMatch(/^KAL-2026-[A-Z2-9]{6}$/);
   });
+});
+
+describe('OrderService', () => {
+  beforeEach(() => jest.clearAllMocks());
 
   describe('createOrder', () => {
-    it('generates orderNumber in KAL-YYYY-NNN format', async () => {
-      const year = new Date().getFullYear();
-      mockOrderCount.mockResolvedValue(5);
-      mockOrderCreate.mockResolvedValue({
-        id: 'ord-1',
-        orderNumber: `KAL-${year}-006`,
-        items: [],
-        guestEmail: 'ana@test.com',
-        total: 14500,
-      });
-      mockReserveStock.mockResolvedValue(undefined);
-      mockSendOrderConfirmation.mockResolvedValue(undefined);
+    it('prices items from the database, never from the client', async () => {
+      const { service, tx } = setup();
 
-      const order = await service.createOrder(fakeInput);
+      const order = await service.createOrder(input);
 
-      const callArg = mockOrderCreate.mock.calls[0][0] as { data: { orderNumber: string } };
-      expect(callArg.data.orderNumber).toMatch(/^KAL-\d{4}-\d{3}$/);
-      expect(callArg.data.orderNumber).toBe(`KAL-${year}-006`);
-      expect(order.orderNumber).toMatch(/^KAL-/);
+      const data = tx.order.create.mock.calls[0][0].data;
+      expect(data.subtotal).toBe(29000);
+      expect(data.total).toBe(29000);
+      expect(data.items.create[0]).toMatchObject({ price: 14500, productName: 'Aurelia Set', sku: 'KAL-AUR-SS-S' });
+      expect(order.orderNumber).toMatch(/^KAL-\d{4}-/);
     });
 
-    it('calls reserveStock with cart items', async () => {
-      mockOrderCount.mockResolvedValue(0);
-      mockOrderCreate.mockResolvedValue({
-        id: 'ord-2',
-        orderNumber: 'KAL-2026-001',
-        items: [],
-        guestEmail: 'ana@test.com',
-        total: 14500,
-      });
-      mockReserveStock.mockResolvedValue(undefined);
-      mockSendOrderConfirmation.mockResolvedValue(undefined);
+    it('reserves stock by product variant inside the transaction', async () => {
+      const { service, tx, inventory } = setup();
 
-      await service.createOrder(fakeInput);
+      await service.createOrder(input);
 
-      expect(mockReserveStock).toHaveBeenCalledWith(
-        [{ sku: 'KAL-AUR-SS-S', quantity: 1 }],
-        'ord-2',
-      );
+      expect(inventory.reserveStock).toHaveBeenCalledWith(tx, [
+        { productId: 'p1', size: 'S', colorName: 'Sage Shore', quantity: 2 },
+      ]);
     });
 
-    it('calls sendOrderConfirmation on success', async () => {
-      const fakeOrder = {
-        id: 'ord-3',
-        orderNumber: 'KAL-2026-001',
-        items: [],
-        guestEmail: 'ana@test.com',
-        total: 14500,
-      };
-      mockOrderCount.mockResolvedValue(0);
-      mockOrderCreate.mockResolvedValue(fakeOrder);
-      mockReserveStock.mockResolvedValue(undefined);
-      mockSendOrderConfirmation.mockResolvedValue(undefined);
+    it('rejects products that are missing or inactive', async () => {
+      const { service, tx } = setup();
+      tx.product.findMany.mockResolvedValue([]);
 
-      await service.createOrder(fakeInput);
+      await expect(service.createOrder(input)).rejects.toThrow(ValidationError);
+      expect(tx.order.create).not.toHaveBeenCalled();
+    });
 
-      expect(mockSendOrderConfirmation).toHaveBeenCalledWith(fakeOrder);
+    it('sends the confirmation email without blocking the order', async () => {
+      const { service, email } = setup();
+      email.sendOrderConfirmation.mockRejectedValue(new Error('SMTP down'));
+
+      await expect(service.createOrder(input)).resolves.toBeDefined();
+      expect(email.sendOrderConfirmation).toHaveBeenCalled();
     });
   });
 
   describe('getOrderByNumber', () => {
     it('returns null for unknown number', async () => {
-      mockOrderFindUnique.mockResolvedValue(null);
+      const { service, db } = setup();
+      db.order.findUnique.mockResolvedValue(null);
 
       const result = await service.getOrderByNumber('KAL-2099-999');
 
       expect(result).toBeNull();
-      expect(mockOrderFindUnique).toHaveBeenCalledWith(
+      expect(db.order.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({ where: { orderNumber: 'KAL-2099-999' } }),
       );
     });
   });
 
   describe('updateOrderStatus', () => {
-    it('logs status transition', async () => {
-      mockOrderUpdate.mockResolvedValue({ id: 'ord-4', status: 'shipped' });
+    it('logs the status transition', async () => {
+      const { service, db } = setup();
+      db.order.findUnique.mockResolvedValue({ status: 'paid' });
+      db.order.update.mockResolvedValue({ id: 'ord-4', status: 'shipped' });
 
       await service.updateOrderStatus('ord-4', 'shipped');
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Order status updated',
-        expect.objectContaining({ orderId: 'ord-4', status: 'shipped' }),
+        expect.objectContaining({ orderId: 'ord-4', from: 'paid', status: 'shipped' }),
       );
+    });
+
+    it('returns stock to inventory when an order is cancelled', async () => {
+      const { service, db, inventory } = setup();
+      db.order.findUnique.mockResolvedValue({ status: 'pending' });
+      db.order.update.mockResolvedValue({ id: 'ord-5', status: 'cancelled' });
+
+      await service.updateOrderStatus('ord-5', 'cancelled');
+
+      expect(inventory.releaseStock).toHaveBeenCalledWith('ord-5');
+    });
+
+    it('does not release stock twice', async () => {
+      const { service, db, inventory } = setup();
+      db.order.findUnique.mockResolvedValue({ status: 'cancelled' });
+      db.order.update.mockResolvedValue({ id: 'ord-6', status: 'refunded' });
+
+      await service.updateOrderStatus('ord-6', 'refunded');
+
+      expect(inventory.releaseStock).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundError for unknown orders', async () => {
+      const { service, db } = setup();
+      db.order.findUnique.mockResolvedValue(null);
+
+      await expect(service.updateOrderStatus('nope', 'paid')).rejects.toThrow(NotFoundError);
     });
   });
 });
