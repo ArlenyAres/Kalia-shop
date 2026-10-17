@@ -1,0 +1,14 @@
+# Nunca subir secretos ni datos locales al build de Vercel
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+server/uploads
+server/logs
+**/dist
+**/coverage
+.agents
+.claude
+skills-lock.json
