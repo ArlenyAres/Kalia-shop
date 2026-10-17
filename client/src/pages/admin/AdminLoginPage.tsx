@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { saveSession } from '../../services/session';
 import './AdminLoginPage.css';
 
 const schema = z.object({
@@ -30,8 +31,7 @@ export function AdminLoginPage() {
         '/auth/login',
         values,
       );
-      localStorage.setItem('kalia_token', data.token);
-      localStorage.setItem('kalia_admin', data.admin.name);
+      saveSession(data.token, data.admin.name);
       navigate('/admin');
     } catch {
       setServerError('Credenciales incorrectas. Inténtalo de nuevo.');

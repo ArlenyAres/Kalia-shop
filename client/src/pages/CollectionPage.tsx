@@ -1,21 +1,32 @@
-import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useCurrency } from '../context/CurrencyContext';
-import { productsService } from '../services/products.service';
+import { ProductCard } from '../components/ProductCard';
+import { useProducts } from '../hooks/useProducts';
 import type { Product, ProductCategory } from '../types/product.types';
+import { CATEGORIES, CATEGORY_LABELS } from '../utils/catalog';
 import './CollectionPage.css';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  bikini: 'Bikinis',
-  completo: 'Completos',
-  trikini: 'Trikinis',
+type SortKey = 'featured' | 'newest' | 'price_asc' | 'price_desc';
+
+const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
+  { value: 'featured', label: 'Destacados' },
+  { value: 'newest', label: 'Novedades' },
+  { value: 'price_asc', label: 'Precio: menor a mayor' },
+  { value: 'price_desc', label: 'Precio: mayor a menor' },
+];
+
+const SORTERS: Record<SortKey, (a: Product, b: Product) => number> = {
+  featured: (a, b) => Number(b.isFeatured) - Number(a.isFeatured),
+  newest: (a, b) => b.createdAt.localeCompare(a.createdAt),
+  price_asc: (a, b) => a.price - b.price,
+  price_desc: (a, b) => b.price - a.price,
 };
 
 function ProductCardSkeleton() {
   return (
-    <div className="coll-card coll-card--skeleton">
-      <div className="coll-card__image skeleton" />
+    <div className="coll-card coll-card--skeleton" aria-hidden="true">
+      <div className="coll-card__image-wrap skeleton" />
       <div className="coll-card__body">
         <div className="skeleton" style={{ height: 12, width: '50%', borderRadius: 2 }} />
         <div className="skeleton" style={{ height: 18, width: '80%', borderRadius: 2 }} />
@@ -26,122 +37,99 @@ function ProductCardSkeleton() {
 }
 
 export function CollectionPage() {
-  const { category } = useParams<{ category?: ProductCategory }>();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { format: fmt } = useCurrency();
+  const { category: rawCategory } = useParams<{ category?: string }>();
+  const category = CATEGORIES.includes(rawCategory as ProductCategory)
+    ? (rawCategory as ProductCategory)
+    : undefined;
+  const isUnknownCategory = Boolean(rawCategory) && !category;
 
-  const title = category ? (CATEGORY_LABELS[category] ?? category) : 'Toda la colección';
+  const { products, loading, error } = useProducts(category);
+  const [sort, setSort] = useState<SortKey>('featured');
+  const reduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
+  const sorted = useMemo(() => [...products].sort(SORTERS[sort]), [products, sort]);
 
-    const fetch = category
-      ? productsService.getByCategory(category)
-      : productsService.getAll().then((r) => r.products);
-
-    fetch
-      .then((data) => { if (!cancelled) setProducts(Array.isArray(data) ? data : []); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-
-    return () => { cancelled = true; };
-  }, [category]);
+  const title = category ? CATEGORY_LABELS[category] : 'Toda la colección';
+  const empty = !loading && (isUnknownCategory || sorted.length === 0);
 
   return (
     <div className="coll-page">
-      {/* Header */}
       <section className="coll-header">
         <div className="container">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <span className="eyebrow">Resort 2026</span>
             <h1 className="section-title" style={{ marginTop: '0.5rem' }}>{title}</h1>
-            <p className="text-muted" style={{ marginTop: '0.5rem' }}>
-              {loading ? '' : `${products.length} piezas`}
-            </p>
           </motion.div>
 
-          {/* Category filters */}
-          <div className="coll-filters">
+          <nav className="coll-filters" aria-label="Categorías">
             <Link
               to="/collection"
+              aria-current={!category ? 'page' : undefined}
               className={`coll-filter-btn${!category ? ' coll-filter-btn--active' : ''}`}
             >
               Todo
             </Link>
-            {['bikini', 'completo', 'trikini'].map((cat) => (
+            {CATEGORIES.map((cat) => (
               <Link
                 key={cat}
                 to={`/collection/${cat}`}
+                aria-current={category === cat ? 'page' : undefined}
                 className={`coll-filter-btn${category === cat ? ' coll-filter-btn--active' : ''}`}
               >
                 {CATEGORY_LABELS[cat]}
               </Link>
             ))}
-          </div>
+          </nav>
         </div>
       </section>
 
-      {/* Grid */}
       <section className="coll-grid-section">
         <div className="container">
+          {!empty && (
+            <div className="coll-toolbar">
+              <span aria-live="polite">{loading ? 'Cargando…' : `${sorted.length} piezas`}</span>
+              <label>
+                <span className="sr-only">Ordenar por</span>
+                <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
+
           <div className="coll-grid">
             {loading
               ? Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)
-              : products.map((product, i) => (
+              : !isUnknownCategory &&
+                sorted.map((product, i) => (
                   <motion.div
                     key={product.id}
-                    initial={{ opacity: 0, y: 24 }}
+                    initial={reduceMotion ? false : { opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: i * 0.06 }}
+                    transition={{ duration: 0.4, delay: Math.min(i, 8) * 0.05 }}
                   >
-                    <Link to={`/product/${product.slug}`} className="coll-card">
-                      <div className="coll-card__image-wrap">
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="coll-card__image"
-                          loading="lazy"
-                        />
-                        {product.compareAtPrice && (
-                          <span className="coll-card__badge">Sale</span>
-                        )}
-                        {product.isFeatured && !product.compareAtPrice && (
-                          <span className="coll-card__badge coll-card__badge--feature">Destacado</span>
-                        )}
-                      </div>
-                      <div className="coll-card__body">
-                        <p className="coll-card__category">{CATEGORY_LABELS[product.category]}</p>
-                        <p className="coll-card__name">{product.name}</p>
-                        <div className="coll-card__price-row">
-                          <span className="coll-card__price">{fmt(product.price)}</span>
-                          {product.compareAtPrice && (
-                            <span className="coll-card__compare">{fmt(product.compareAtPrice)}</span>
-                          )}
-                        </div>
-                        <div className="coll-card__colors">
-                          {product.colors.slice(0, 4).map((c) => (
-                            <span
-                              key={c.name}
-                              className="coll-card__color-dot"
-                              style={{ background: c.hex }}
-                              title={c.name}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </Link>
+                    <ProductCard product={product} />
                   </motion.div>
                 ))}
           </div>
 
-          {!loading && products.length === 0 && (
+          {empty && (
             <div className="coll-empty">
-              <p>No hay piezas en esta categoría todavía.</p>
+              <p>
+                {error
+                  ? 'No pudimos cargar la colección. Inténtalo de nuevo en unos segundos.'
+                  : isUnknownCategory
+                    ? 'Esa categoría no existe.'
+                    : 'No hay piezas en esta categoría todavía.'}
+              </p>
               <Link to="/collection" className="coll-filter-btn coll-filter-btn--active">
                 Ver todo
               </Link>

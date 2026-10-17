@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { productsService } from '../services/products.service';
 import type { Product, ProductSize } from '../types/product.types';
+import { CATEGORY_LABELS, CATEGORY_LABELS_SINGULAR, cartSku, isVariantAvailable } from '../utils/catalog';
 import './ProductPage.css';
 
 export function ProductPage() {
@@ -26,13 +27,20 @@ export function ProductPage() {
   useEffect(() => {
     if (!slug) return;
     let cancelled = false;
+    // Al navegar entre productos no debe quedar el estado del anterior.
+    setLoading(true);
+    setNotFound(false);
+    setSelectedImage(0);
     productsService
       .getBySlug(slug)
       .then((data) => {
         if (!cancelled) {
           setProduct(data);
-          if (data.colors[0]) setSelectedColor(data.colors[0].name);
-          if (data.availableSizes[0]) setSelectedSize(data.availableSizes[0]);
+          const color = data.colors[0]?.name ?? null;
+          setSelectedColor(color);
+          // Preselecciona la primera talla con stock para ese color.
+          const size = color ? data.availableSizes.find((s) => isVariantAvailable(data, s, color)) : undefined;
+          setSelectedSize(size ?? null);
         }
       })
       .catch(() => { if (!cancelled) setNotFound(true); })
@@ -40,8 +48,18 @@ export function ProductPage() {
     return () => { cancelled = true; };
   }, [slug]);
 
+  const selectionAvailable =
+    !!product && !!selectedSize && !!selectedColor && isVariantAvailable(product, selectedSize, selectedColor);
+
+  const handleSelectColor = (color: string) => {
+    setSelectedColor(color);
+    if (product && selectedSize && !isVariantAvailable(product, selectedSize, color)) {
+      setSelectedSize(product.availableSizes.find((s) => isVariantAvailable(product, s, color)) ?? null);
+    }
+  };
+
   const handleAddToCart = () => {
-    if (!product || !selectedSize || !selectedColor) return;
+    if (!product || !selectedSize || !selectedColor || !selectionAvailable) return;
     addItem({
       productId: product.id,
       productName: product.name,
@@ -49,7 +67,7 @@ export function ProductPage() {
       slug: product.slug,
       color: selectedColor,
       size: selectedSize,
-      sku: `${product.id}-${selectedSize}-${selectedColor.replace(/\s/g, '')}`,
+      sku: cartSku(product.id, selectedSize, selectedColor),
       price: product.price,
       quantity: 1,
     });
@@ -92,7 +110,7 @@ export function ProductPage() {
     <div className="prod-page">
       <div className="container">
         <Link to={`/collection/${product.category}`} className="prod-back">
-          <ArrowLeft size={14} /> Volver a {product.category === 'bikini' ? 'Bikinis' : product.category === 'completo' ? 'Completos' : 'Trikinis'}
+          <ArrowLeft size={14} /> Volver a {CATEGORY_LABELS[product.category]}
         </Link>
 
         <div className="prod-layout">
@@ -113,9 +131,10 @@ export function ProductPage() {
                     key={i}
                     className={`prod-thumb${selectedImage === i ? ' prod-thumb--active' : ''}`}
                     onClick={() => setSelectedImage(i)}
-                    aria-label={`Imagen ${i + 1}`}
+                    aria-label={`Ver imagen ${i + 1}`}
+                    aria-pressed={selectedImage === i}
                   >
-                    <img src={img} alt={`${product.name} vista ${i + 1}`} />
+                    <img src={img} alt="" />
                   </button>
                 ))}
               </div>
@@ -129,7 +148,7 @@ export function ProductPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <span className="eyebrow">{product.category === 'bikini' ? 'Bikini' : product.category === 'completo' ? 'Completo' : 'Trikini'}</span>
+            <span className="eyebrow">{CATEGORY_LABELS_SINGULAR[product.category]}</span>
             <h1 className="prod-name">{product.name}</h1>
 
             <div className="prod-price-row">
@@ -152,8 +171,9 @@ export function ProductPage() {
                     key={c.name}
                     className={`prod-color-btn${selectedColor === c.name ? ' prod-color-btn--active' : ''}`}
                     style={{ background: c.hex }}
-                    onClick={() => setSelectedColor(c.name)}
+                    onClick={() => handleSelectColor(c.name)}
                     aria-label={c.name}
+                    aria-pressed={selectedColor === c.name}
                     title={c.name}
                   />
                 ))}
@@ -164,15 +184,21 @@ export function ProductPage() {
             <div className="prod-option">
               <p className="prod-option__label">Talla</p>
               <div className="prod-sizes">
-                {product.availableSizes.map((size) => (
-                  <button
-                    key={size}
-                    className={`prod-size-btn${selectedSize === size ? ' prod-size-btn--active' : ''}`}
-                    onClick={() => setSelectedSize(size)}
-                  >
-                    {size}
-                  </button>
-                ))}
+                {product.availableSizes.map((size) => {
+                  const available = !selectedColor || isVariantAvailable(product, size, selectedColor);
+                  return (
+                    <button
+                      key={size}
+                      className={`prod-size-btn${selectedSize === size ? ' prod-size-btn--active' : ''}`}
+                      onClick={() => setSelectedSize(size)}
+                      aria-pressed={selectedSize === size}
+                      disabled={!available}
+                      aria-label={available ? `Talla ${size}` : `Talla ${size}, agotada`}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -181,10 +207,10 @@ export function ProductPage() {
               size="lg"
               className="prod-add-btn"
               onClick={handleAddToCart}
-              disabled={!selectedSize || !selectedColor}
+              disabled={!selectionAvailable}
             >
               <ShoppingBag size={16} />
-              {added ? '¡Añadido!' : 'Añadir al carrito'}
+              {added ? '¡Añadido!' : selectionAvailable ? 'Añadir al carrito' : 'Agotado en este color'}
             </Button>
 
             {/* Details */}

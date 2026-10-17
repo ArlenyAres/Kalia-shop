@@ -8,7 +8,7 @@ import type { Product } from '../types/product.types';
 const mockAddItem = vi.fn();
 
 vi.mock('../context/CartContext', () => ({
-  useCart: () => ({ addItem: mockAddItem }),
+  useCart: () => ({ addItem: mockAddItem, openDrawer: vi.fn() }),
 }));
 
 const fakeProduct: Product = {
@@ -67,9 +67,9 @@ describe('ProductCard', () => {
     expect(screen.queryByText('Sale')).not.toBeInTheDocument();
   });
 
-  it('calls addItem on quick-add interaction', () => {
+  it('adds the chosen size on quick-add', () => {
     renderCard();
-    fireEvent.click(screen.getByRole('button', { name: /añadir/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir Aurelia Set talla M' }));
     expect(mockAddItem).toHaveBeenCalledTimes(1);
     expect(mockAddItem).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -78,8 +78,21 @@ describe('ProductCard', () => {
         slug: 'aurelia-set',
         price: 14500,
         quantity: 1,
-        sku: 'b1-XS-SageShore',
+        size: 'M',
+        sku: 'b1-M-SageShore',
       }),
     );
+  });
+
+  it('disables sizes without stock for the default color', () => {
+    renderCard({
+      ...fakeProduct,
+      stock: [
+        { size: 'S', colorName: 'Sage Shore', quantity: 0, sku: 'x' },
+        { size: 'M', colorName: 'Sage Shore', quantity: 4, sku: 'y' },
+      ],
+    });
+    expect(screen.getByRole('button', { name: 'Añadir Aurelia Set talla S' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Añadir Aurelia Set talla M' })).toBeEnabled();
   });
 });

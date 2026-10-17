@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 import logger from '../utils/logger';
 import type { CartContextValue, CartItem } from '../types/cart.types';
 
@@ -70,53 +70,47 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }));
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+    } catch {
+      // modo privado o cuota llena: el carrito sigue funcionando en memoria
+    }
   }, [state.items]);
 
   const itemCount = state.items.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = state.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  const addItem = (item: CartItem) => {
-    logger.info('Cart: addItem', { sku: item.sku, qty: item.quantity });
-    dispatch({ type: 'ADD_ITEM', payload: item });
-  };
-
-  const removeItem = (sku: string) => {
-    logger.info('Cart: removeItem', { sku });
-    dispatch({ type: 'REMOVE_ITEM', payload: sku });
-  };
-
-  const updateQuantity = (sku: string, quantity: number) => {
-    logger.info('Cart: updateQuantity', { sku, quantity });
-    dispatch({ type: 'UPDATE_QTY', payload: { sku, quantity } });
-  };
-
-  const clearCart = () => {
-    logger.info('Cart: clearCart');
-    dispatch({ type: 'CLEAR' });
-  };
-
-  const openDrawer = () => dispatch({ type: 'OPEN_DRAWER' });
-  const closeDrawer = () => dispatch({ type: 'CLOSE_DRAWER' });
-
-  return (
-    <CartContext.Provider
-      value={{
-        items: state.items,
-        isDrawerOpen: state.isDrawerOpen,
-        itemCount,
-        subtotal,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        openDrawer,
-        closeDrawer,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
+  // Funciones estables: los consumidores no se re-renderizan ni re-ejecutan efectos sin motivo.
+  const actions = useMemo(
+    () => ({
+      addItem: (item: CartItem) => {
+        logger.info('Cart: addItem', { sku: item.sku, qty: item.quantity });
+        dispatch({ type: 'ADD_ITEM', payload: item });
+      },
+      removeItem: (sku: string) => {
+        logger.info('Cart: removeItem', { sku });
+        dispatch({ type: 'REMOVE_ITEM', payload: sku });
+      },
+      updateQuantity: (sku: string, quantity: number) => {
+        logger.info('Cart: updateQuantity', { sku, quantity });
+        dispatch({ type: 'UPDATE_QTY', payload: { sku, quantity } });
+      },
+      clearCart: () => {
+        logger.info('Cart: clearCart');
+        dispatch({ type: 'CLEAR' });
+      },
+      openDrawer: () => dispatch({ type: 'OPEN_DRAWER' }),
+      closeDrawer: () => dispatch({ type: 'CLOSE_DRAWER' }),
+    }),
+    [],
   );
+
+  const value = useMemo<CartContextValue>(
+    () => ({ items: state.items, isDrawerOpen: state.isDrawerOpen, itemCount, subtotal, ...actions }),
+    [state.items, state.isDrawerOpen, itemCount, subtotal, actions],
+  );
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart(): CartContextValue {

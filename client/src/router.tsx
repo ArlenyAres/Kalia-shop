@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AboutPage } from './pages/AboutPage';
@@ -8,16 +9,28 @@ import { ConfirmationPage } from './pages/ConfirmationPage';
 import { HomePage } from './pages/HomePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ProductPage } from './pages/ProductPage';
-import { AdminLoginPage } from './pages/admin/AdminLoginPage';
-import { DashboardPage } from './pages/admin/DashboardPage';
-import { AdminProductsPage } from './pages/admin/AdminProductsPage';
-import { AdminOrdersPage } from './pages/admin/AdminOrdersPage';
-import { AdminLayout } from './components/admin/AdminLayout';
-import { ProductForm } from './components/admin/ProductForm';
+import { clearSession, hasValidSession } from './services/session';
+
+// El panel de administración se descarga solo cuando se visita: la tienda no paga su peso.
+const named = <T extends string>(loader: () => Promise<Record<T, React.ComponentType>>, name: T) =>
+  lazy(() => loader().then((m) => ({ default: m[name] })));
+
+const AdminLoginPage = named(() => import('./pages/admin/AdminLoginPage'), 'AdminLoginPage');
+const AdminLayout = named(() => import('./components/admin/AdminLayout'), 'AdminLayout');
+const DashboardPage = named(() => import('./pages/admin/DashboardPage'), 'DashboardPage');
+const AdminProductsPage = named(() => import('./pages/admin/AdminProductsPage'), 'AdminProductsPage');
+const AdminOrdersPage = named(() => import('./pages/admin/AdminOrdersPage'), 'AdminOrdersPage');
+const ProductForm = named(() => import('./components/admin/ProductForm'), 'ProductForm');
+
+function AdminSuspense({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<div className="admin-loading" role="status">Cargando panel…</div>}>{children}</Suspense>;
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('kalia_token');
-  if (!token) return <Navigate to="/admin/login" replace />;
+  if (!hasValidSession()) {
+    clearSession();
+    return <Navigate to="/admin/login" replace />;
+  }
   return <>{children}</>;
 }
 
@@ -34,25 +47,32 @@ export const router = createBrowserRouter([
       { path: 'checkout', element: <CheckoutPage /> },
       { path: 'confirmacion/:orderNumber', element: <ConfirmationPage /> },
       { path: 'about', element: <AboutPage /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
   {
     path: '/admin/login',
-    element: <AdminLoginPage />,
+    element: (
+      <AdminSuspense>
+        <AdminLoginPage />
+      </AdminSuspense>
+    ),
   },
   {
     path: '/admin',
     element: (
       <ProtectedRoute>
-        <AdminLayout />
+        <AdminSuspense>
+          <AdminLayout />
+        </AdminSuspense>
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <DashboardPage /> },
-      { path: 'productos', element: <AdminProductsPage /> },
-      { path: 'productos/nuevo', element: <ProductForm /> },
-      { path: 'productos/:id', element: <ProductForm /> },
-      { path: 'pedidos', element: <AdminOrdersPage /> },
+      { index: true, element: <AdminSuspense><DashboardPage /></AdminSuspense> },
+      { path: 'productos', element: <AdminSuspense><AdminProductsPage /></AdminSuspense> },
+      { path: 'productos/nuevo', element: <AdminSuspense><ProductForm /></AdminSuspense> },
+      { path: 'productos/:id', element: <AdminSuspense><ProductForm /></AdminSuspense> },
+      { path: 'pedidos', element: <AdminSuspense><AdminOrdersPage /></AdminSuspense> },
     ],
   },
 ]);

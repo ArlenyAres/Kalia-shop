@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '../config/env.js';
 import logger from '../utils/logger.js';
 
 export interface AuthRequest extends Request {
@@ -17,7 +18,7 @@ export function verifyToken(req: AuthRequest, res: Response, next: NextFunction)
   const token = authHeader.slice(7);
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
+    const payload = jwt.verify(token, getJwtSecret()) as {
       id: string;
       email: string;
       name: string;

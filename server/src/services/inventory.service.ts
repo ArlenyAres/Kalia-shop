@@ -1,60 +1,63 @@
+import type { Prisma, PrismaClient } from '@prisma/client';
 import prisma from '../config/database.js';
 import { StockError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
-interface StockItem {
-  sku: string;
+export interface VariantQuantity {
+  productId: string;
+  size: string;
+  colorName: string;
   quantity: number;
 }
 
+type Tx = Prisma.TransactionClient;
+
 export class InventoryService {
-  private reservations = new Map<string, StockItem[]>();
+  constructor(private readonly db: PrismaClient = prisma) {}
 
-  async reserveStock(items: StockItem[], orderId: string): Promise<void> {
-    await prisma.$transaction(async (tx) => {
-      for (const item of items) {
-        const stock = await tx.stock.findUnique({ where: { sku: item.sku } });
+  /**
+   * Descuenta stock dentro de la transacción recibida. El descuento es condicional
+   * (quantity >= pedido) para que dos compras simultáneas no dejen stock negativo.
+   * Devuelve el SKU real de cada variante.
+   */
+  async reserveStock(tx: Tx, items: VariantQuantity[]): Promise<string[]> {
+    const skus: string[] = [];
+    for (const item of items) {
+      const where = { productId: item.productId, size: item.size, colorName: item.colorName };
+      const { count } = await tx.stock.updateMany({
+        where: { ...where, quantity: { gte: item.quantity } },
+        data: { quantity: { decrement: item.quantity } },
+      });
 
-        if (!stock || stock.quantity < item.quantity) {
-          logger.warn('Insufficient stock', { sku: item.sku, requested: item.quantity, available: stock?.quantity ?? 0 });
-          throw new StockError(`Insufficient stock for SKU: ${item.sku}`);
-        }
-
-        await tx.stock.update({
-          where: { sku: item.sku },
-          data: { quantity: { decrement: item.quantity } },
-        });
+      if (count === 0) {
+        logger.warn('Insufficient stock', { ...where, requested: item.quantity });
+        throw new StockError(`Sin stock suficiente para ${item.size} / ${item.colorName}`);
       }
-    });
 
-    this.reservations.set(orderId, items);
-    logger.info('Stock reserved', { orderId, items });
+      const variant = await tx.stock.findFirst({ where, select: { sku: true } });
+      skus.push(variant?.sku ?? '');
+    }
+    return skus;
   }
 
+  /** Devuelve al inventario las unidades de un pedido (cancelación o pago fallido). */
   async releaseStock(orderId: string): Promise<void> {
-    const items = this.reservations.get(orderId);
-    if (!items) return;
+    const items = await this.db.orderItem.findMany({ where: { orderId } });
+    if (!items.length) return;
 
-    await Promise.all(
+    await this.db.$transaction(
       items.map((item) =>
-        prisma.stock.update({
-          where: { sku: item.sku },
+        this.db.stock.updateMany({
+          where: { productId: item.productId, size: item.size, colorName: item.color },
           data: { quantity: { increment: item.quantity } },
         }),
       ),
     );
-
-    this.reservations.delete(orderId);
     logger.info('Stock released', { orderId });
   }
 
-  async confirmStockDeduction(orderId: string): Promise<void> {
-    this.reservations.delete(orderId);
-    logger.info('Stock confirmed', { orderId });
-  }
-
   async getLowStock(threshold = 3) {
-    return prisma.stock.findMany({
+    return this.db.stock.findMany({
       where: { quantity: { lte: threshold } },
       include: { product: { select: { id: true, name: true, slug: true } } },
       orderBy: { quantity: 'asc' },
@@ -62,7 +65,7 @@ export class InventoryService {
   }
 
   async updateVariantStock(productId: string, size: string, colorName: string, quantity: number) {
-    return prisma.stock.updateMany({
+    return this.db.stock.updateMany({
       where: { productId, size, colorName },
       data: { quantity },
     });

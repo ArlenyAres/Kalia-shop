@@ -25,7 +25,7 @@ export class EmailService {
       from: '"Kalia" <noreply@kalia.shop>',
       to,
       subject: `Confirmación de pedido ${order.orderNumber}`,
-      html: `<p>Tu pedido <strong>${order.orderNumber}</strong> ha sido recibido. Total: ${order.total}</p>`,
+      html: `<p>Tu pedido <strong>${order.orderNumber}</strong> ha sido recibido. Total: $${(order.total / 100).toFixed(2)} USD</p>`,
     });
 
     logger.info('Order confirmation email sent', { orderNumber: order.orderNumber, to });

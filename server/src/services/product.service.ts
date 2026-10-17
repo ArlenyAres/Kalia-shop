@@ -1,8 +1,9 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import prisma from '../config/database.js';
 import { NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 import type { ProductFilters } from '../types/product.types.js';
+import type { ProductCreateInput, ProductUpdateInput } from '../validation/schemas.js';
 
 function slugify(text: string): string {
   return text
@@ -15,11 +16,13 @@ function slugify(text: string): string {
 }
 
 export class ProductService {
+  constructor(private readonly db: PrismaClient = prisma) {}
+
   async getAll(filters: ProductFilters = {}) {
-    const { category, page = 1, limit = 12, sortBy = 'newest', tags } = filters;
+    const { category, page = 1, limit = 12, sortBy = 'newest', tags, includeInactive = false } = filters;
 
     const where: Prisma.ProductWhereInput = {
-      isActive: true,
+      ...(!includeInactive && { isActive: true }),
       ...(category && { category }),
       ...(tags && { tags: { hasSome: [tags] } }),
     };
@@ -34,14 +37,14 @@ export class ProductService {
             : { createdAt: 'desc' };
 
     const [products, total] = await Promise.all([
-      prisma.product.findMany({
+      this.db.product.findMany({
         where,
         orderBy,
         skip: (page - 1) * limit,
         take: limit,
         include: { stock: true },
       }),
-      prisma.product.count({ where }),
+      this.db.product.count({ where }),
     ]);
 
     logger.info('Products fetched', { filters, total });
@@ -53,7 +56,7 @@ export class ProductService {
   }
 
   async getBySlug(slug: string) {
-    const product = await prisma.product.findUnique({
+    const product = await this.db.product.findUnique({
       where: { slug },
       include: { stock: true },
     });
@@ -67,7 +70,7 @@ export class ProductService {
   }
 
   async getByCategory(category: string) {
-    return prisma.product.findMany({
+    return this.db.product.findMany({
       where: { category: category as Prisma.EnumProductCategoryFilter['equals'], isActive: true },
       include: { stock: true },
       orderBy: { createdAt: 'desc' },
@@ -75,7 +78,7 @@ export class ProductService {
   }
 
   async getFeatured() {
-    return prisma.product.findMany({
+    return this.db.product.findMany({
       where: { isFeatured: true, isActive: true },
       include: { stock: true },
       orderBy: { createdAt: 'desc' },
@@ -83,7 +86,7 @@ export class ProductService {
   }
 
   async search(query: string) {
-    return prisma.product.findMany({
+    return this.db.product.findMany({
       where: {
         isActive: true,
         OR: [
@@ -96,17 +99,15 @@ export class ProductService {
     });
   }
 
-  async create(data: Prisma.ProductCreateInput & { stock?: Array<{ size: string; colorName: string; sku: string; quantity?: number }> }) {
-    const { stock, ...productData } = data as typeof data & { stock?: Array<{ size: string; colorName: string; sku: string; quantity?: number }> };
+  async create(data: ProductCreateInput) {
+    const { stock, slug, ...productData } = data;
 
-    const slug = (productData.slug as string | undefined) ?? slugify(productData.name as string);
-
-    const product = await prisma.product.create({
+    const product = await this.db.product.create({
       data: {
         ...productData,
-        slug,
+        slug: slug ?? slugify(productData.name),
         ...(stock && { stock: { create: stock } }),
-      } as Prisma.ProductCreateInput,
+      },
       include: { stock: true },
     });
 
@@ -114,10 +115,10 @@ export class ProductService {
     return product;
   }
 
-  async update(id: string, data: Prisma.ProductUpdateInput & { stock?: Array<{ size: string; colorName: string; sku: string; quantity?: number }> }) {
-    const { stock, ...rest } = data as typeof data & { stock?: Array<{ size: string; colorName: string; sku: string; quantity?: number }> };
+  async update(id: string, data: ProductUpdateInput) {
+    const { stock, ...rest } = data;
 
-    const product = await prisma.product.update({
+    const product = await this.db.product.update({
       where: { id },
       data: {
         ...rest,
@@ -127,7 +128,7 @@ export class ProductService {
             create: stock,
           },
         }),
-      } as Prisma.ProductUpdateInput,
+      },
       include: { stock: true },
     });
 
@@ -136,7 +137,7 @@ export class ProductService {
   }
 
   async softDelete(id: string) {
-    await prisma.product.update({ where: { id }, data: { isActive: false } });
+    await this.db.product.update({ where: { id }, data: { isActive: false } });
     logger.info('Product deactivated', { id });
   }
 }

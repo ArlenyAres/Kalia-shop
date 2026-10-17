@@ -465,7 +465,7 @@ Para mantener el proceso activo, usa un gestor de procesos:
 ```bash
 # Con PM2
 npm install -g pm2
-pm2 start dist/app.js --name kalia-server
+pm2 start dist/server.js --name kalia-server
 pm2 save
 pm2 startup   # configura el arranque automático con el sistema
 ```

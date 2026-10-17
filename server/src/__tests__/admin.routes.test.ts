@@ -131,3 +131,30 @@ describe('GET /api/admin/dashboard', () => {
     expect(Array.isArray(res.body.lowStock)).toBe(true);
   });
 });
+
+describe('Admin input validation', () => {
+  it('rejects an unknown order status with 422', async () => {
+    const res = await request(app)
+      .patch('/api/admin/orders/o1/status')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'hacked' });
+    expect(res.status).toBe(422);
+  });
+
+  it('rejects unknown product fields with 422', async () => {
+    const res = await request(app)
+      .post('/api/admin/products')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'X', category: 'bikini', price: 100, id: 'forced-id' });
+    expect(res.status).toBe(422);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects negative stock quantities with 422', async () => {
+    const res = await request(app)
+      .patch('/api/admin/products/p1/stock')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ size: 'S', colorName: 'Sage Shore', quantity: -4 });
+    expect(res.status).toBe(422);
+  });
+});

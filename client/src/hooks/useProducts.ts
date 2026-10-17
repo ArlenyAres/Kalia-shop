@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { productsService } from '../services/products.service';
 import type { Product, ProductCategory } from '../types/product.types';
 
+// La colección completa cabe en una página; si crece, pasar a paginación real.
+const ALL_PRODUCTS_LIMIT = 100;
+
 interface UseProductsResult {
   products: Product[];
   loading: boolean;
@@ -20,7 +23,7 @@ export function useProducts(category?: ProductCategory): UseProductsResult {
 
     const fetch = category
       ? productsService.getByCategory(category)
-      : productsService.getAll().then((r) => r.products);
+      : productsService.getAll({ limit: ALL_PRODUCTS_LIMIT }).then((r) => r.products);
 
     fetch
       .then((data) => {
