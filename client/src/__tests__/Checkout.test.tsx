@@ -115,6 +115,17 @@ describe('CheckoutPage', () => {
     });
   });
 
+  it('simulates a demo order when the checkout endpoint returns 404', async () => {
+    mockApiPost.mockRejectedValue({ isAxiosError: true, response: { status: 404 } });
+    renderCheckout();
+    await fillRequiredFields();
+    fireEvent.submit(screen.getByRole('button', { name: /confirmar pedido/i }));
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/^\/confirmacion\/KAL-\d{4}-D/));
+    });
+    expect(mockToastError).not.toHaveBeenCalled();
+  });
+
   it('shows error toast on payment failure', async () => {
     mockApiPost.mockRejectedValue(new Error('Network error'));
     renderCheckout();
