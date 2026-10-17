@@ -8,6 +8,3 @@ server/.env
 client/tsconfig.tsbuildinfo
 .vercel
 .env*.local
-
-.vercel
-.env*
