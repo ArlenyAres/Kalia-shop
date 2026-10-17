@@ -1,17 +1,16 @@
 import { ShoppingBag, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import { Button } from './Button';
 import './CartDrawer.css';
 
 export function CartDrawer() {
   const { items, isDrawerOpen, closeDrawer, removeItem, updateQuantity, subtotal, itemCount } =
     useCart();
+  const { format: fmt } = useCurrency();
 
   if (!isDrawerOpen) return null;
-
-  const fmt = (n: number) =>
-    new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(n);
 
   return (
     <>

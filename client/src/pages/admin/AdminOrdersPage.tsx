@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { formatPrice } from '../../context/CurrencyContext';
 import { ChevronDown, ChevronUp, Save } from 'lucide-react';
 import {
   getOrders,
@@ -26,10 +27,6 @@ function formatDate(iso: string): string {
     month: '2-digit',
     year: 'numeric',
   });
-}
-
-function formatPrice(cents: number): string {
-  return `€${(cents / 100).toFixed(2)}`;
 }
 
 interface Toast {

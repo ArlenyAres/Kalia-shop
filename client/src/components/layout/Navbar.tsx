@@ -2,6 +2,7 @@ import { ShoppingBag, X, Menu } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { CURRENCIES, useCurrency } from '../../context/CurrencyContext';
 import './Navbar.css';
 
 const navLinks = [
@@ -13,6 +14,7 @@ const navLinks = [
 
 export function Navbar() {
   const { itemCount, openDrawer } = useCart();
+  const { currency, setCurrency } = useCurrency();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -70,6 +72,20 @@ export function Navbar() {
           </nav>
 
           <div className="navbar__actions">
+            <div className="navbar__currency" role="group" aria-label="Moneda">
+              {CURRENCIES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-pressed={currency === c}
+                  className={currency === c ? 'is-active' : ''}
+                  onClick={() => setCurrency(c)}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+
             <button
               className="navbar__cart"
               onClick={openDrawer}

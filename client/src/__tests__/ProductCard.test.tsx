@@ -48,7 +48,7 @@ describe('ProductCard', () => {
   it('renders product name and price', () => {
     renderCard();
     expect(screen.getByText('Aurelia Set')).toBeInTheDocument();
-    expect(screen.getByText(/14[\.,]500/)).toBeInTheDocument();
+    expect(screen.getByText('$145')).toBeInTheDocument();
   });
 
   it('links to /product/:slug', () => {

@@ -35,7 +35,7 @@ export class PaymentService {
       body: JSON.stringify({
         intent: 'CAPTURE',
         purchase_units: [
-          { amount: { currency_code: 'DOP', value: (total / 100).toFixed(2) } },
+          { amount: { currency_code: 'USD', value: (total / 100).toFixed(2) } },
         ],
       }),
     });
@@ -68,7 +68,7 @@ export class PaymentService {
     try {
       const intent = await stripe.paymentIntents.create({
         amount,
-        currency: 'dop',
+        currency: 'usd',
         automatic_payment_methods: { enabled: true },
       });
 
